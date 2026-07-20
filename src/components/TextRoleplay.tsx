@@ -711,11 +711,6 @@ export default function TextRoleplay() {
       {sessionEnded && isReviewing && (
         <div style={{ padding: '16px', borderTop: '1px solid #e2e8f0', background: '#f0f9ff', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 100 }}>
           <style>{`
-            @keyframes dots {
-              0%, 20% { content: '.'; }
-              40% { content: '..'; }
-              60%, 100% { content: '...'; }
-            }
             @keyframes pulse {
               0%, 100% { opacity: 1; }
               50% { opacity: 0.5; }
@@ -723,8 +718,7 @@ export default function TextRoleplay() {
             .loading-dots { animation: pulse 1.5s infinite; }
           `}</style>
           <div style={{ fontSize: 32, marginBottom: 8 }}>⏳</div>
-          <div style={{ fontSize: 12, fontWeight: 600, color: '#1e40af', marginBottom: 4 }}>Feedback wird geladen...</div>
-          <div style={{ fontSize: 11, color: '#64748b' }}>Claude analysiert dein Gespräch</div>
+          <div style={{ fontSize: 12, fontWeight: 600, color: '#1e40af' }}>Feedback wird geladen</div>
         </div>
       )}
 
