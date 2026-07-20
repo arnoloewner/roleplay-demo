@@ -1,11 +1,13 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const { Anthropic } = require('@anthropic-ai/sdk');
 const { OpenAI } = require('openai');
 
 const PORT = process.env.PORT || 3002;
 const app = express();
+const distPath = path.join(__dirname, '..', 'dist');
 
 // ── Middleware ──────────────────────────────────────────────────────────────
 app.use(cors({ origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175', 'http://localhost:5176'], credentials: true }));
@@ -13,7 +15,13 @@ app.use(express.json());
 app.use(express.text({ type: 'text/event-stream' }));
 
 // Serve frontend static files
-app.use(express.static('dist'));
+const fs = require('fs');
+if (fs.existsSync(distPath)) {
+  app.use(express.static(distPath));
+  console.log(`📁 Serving frontend from: ${distPath}`);
+} else {
+  console.warn(`⚠️ Warning: dist folder not found at ${distPath}`);
+}
 
 // ── Clients ─────────────────────────────────────────────────────────────────
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -223,7 +231,12 @@ Antworte AUSSCHLIESSLICH mit gültigem JSON (kein Markdown):
 
 // ── Fallback to index.html for SPA ──────────────────────────────────────────
 app.get('*', (req, res) => {
-  res.sendFile(__dirname + '/dist/index.html');
+  const indexPath = path.join(distPath, 'index.html');
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.status(404).json({ error: 'Frontend not built. Please run npm run build.' });
+  }
 });
 
 // ── Start server ────────────────────────────────────────────────────────────
