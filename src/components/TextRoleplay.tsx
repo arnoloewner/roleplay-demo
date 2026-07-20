@@ -652,7 +652,7 @@ export default function TextRoleplay() {
           ))}
           {isProcessing && (
             <div style={{ fontSize: 10, color: '#64748b', fontStyle: 'italic' }}>
-              Customer antwortet...
+              Kunde antwortet...
             </div>
           )}
           <div ref={bottomRef} />
