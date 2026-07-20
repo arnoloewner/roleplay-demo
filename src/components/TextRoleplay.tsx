@@ -327,45 +327,44 @@ export default function TextRoleplay() {
   // ── Setup Screen ────────────────────────────────────────────────────────────
   if (!sessionStarted) {
     return (
-      <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #f0f4f8 0%, #ffffff 100%)', padding: '40px 20px' }}>
-        <div style={{ maxWidth: 900, margin: '0 auto' }}>
+      <div style={{ height: '100vh', background: 'linear-gradient(135deg, #f0f4f8 0%, #ffffff 100%)', padding: '16px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto', width: '100%', display: 'flex', flexDirection: 'column', height: '100%' }}>
           {/* Header */}
-          <div style={{ textAlign: 'center', marginBottom: 50 }}>
-            <h1 style={{ fontSize: 32, fontWeight: 700, margin: '0 0 8px 0', color: '#1e293b' }}>
+          <div style={{ textAlign: 'center', marginBottom: 12, flexShrink: 0 }}>
+            <h1 style={{ fontSize: 24, fontWeight: 700, margin: '0 0 4px 0', color: '#1e293b' }}>
               🎯 Sales Roleplay
             </h1>
-            <p style={{ fontSize: 14, color: '#64748b', margin: 0 }}>
+            <p style={{ fontSize: 11, color: '#64748b', margin: 0 }}>
               Trainiere deine Verkaufsfähigkeiten mit realistischen Kundenpersonas
             </p>
           </div>
 
           {/* Main Grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 30, marginBottom: 40 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, marginBottom: 10, flex: 1, overflowY: 'auto', paddingRight: 8 }}>
             {/* Left: Company Personas */}
-            <div style={{ background: '#fff', borderRadius: 12, padding: 28, boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
-              <h2 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 20px 0', color: '#1e293b', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ background: '#fff', borderRadius: 10, padding: 14, boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+              <h2 style={{ fontSize: 13, fontWeight: 700, margin: '0 0 10px 0', color: '#1e293b' }}>
                 🏢 Unternehmen
               </h2>
 
-              <div style={{ marginBottom: 24 }}>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 10 }}>
+              <div style={{ marginBottom: 12 }}>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 6 }}>
                   Industrie
                 </label>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 5 }}>
                   {INDUSTRIES.map((ind) => (
                     <button
                       key={ind.key}
                       onClick={() => { setSelectedIndustry(ind.key); setUseVorzimmer(false); setUseCustom(false); }}
                       style={{
-                        padding: '10px 12px',
+                        padding: '6px 8px',
                         background: selectedIndustry === ind.key ? '#2563eb' : '#f1f5f9',
                         color: selectedIndustry === ind.key ? '#fff' : '#1e293b',
                         border: 'none',
-                        borderRadius: 8,
+                        borderRadius: 6,
                         cursor: 'pointer',
-                        fontSize: 12,
+                        fontSize: 10,
                         fontWeight: 500,
-                        transition: 'all 0.2s',
                       }}
                     >
                       {ind.emoji} {ind.label}
@@ -375,193 +374,174 @@ export default function TextRoleplay() {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 10 }}>
-                  Unternehmensgröße
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 6 }}>
+                  Größe
                 </label>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 5 }}>
                   {SIZE_TIERS.map((size) => (
                     <button
                       key={size.key}
                       onClick={() => setSelectedSize(size.key)}
                       style={{
-                        padding: '10px 12px',
+                        padding: '6px 8px',
                         background: selectedSize === size.key ? '#2563eb' : '#f1f5f9',
                         color: selectedSize === size.key ? '#fff' : '#1e293b',
                         border: 'none',
-                        borderRadius: 8,
+                        borderRadius: 6,
                         cursor: 'pointer',
-                        fontSize: 12,
+                        fontSize: 9,
                         fontWeight: 500,
                       }}
                     >
-                      {size.label}
-                      <div style={{ fontSize: 11, opacity: 0.8, marginTop: 2 }}>{size.sub}</div>
+                      <div>{size.label}</div>
+                      <div style={{ fontSize: 8, opacity: 0.8 }}>{size.sub}</div>
                     </button>
                   ))}
                 </div>
               </div>
             </div>
 
-            {/* Right: Vorzimmer & Custom */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-              {/* Vorzimmer Section */}
-              <div style={{ background: '#fff', borderRadius: 12, padding: 28, boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-                  <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0, color: '#1e293b', display: 'flex', alignItems: 'center', gap: 8 }}>
-                    🛡️ Vorzimmer
-                  </h2>
-                  <button
-                    onClick={() => setUseVorzimmer(!useVorzimmer)}
-                    style={{
-                      background: useVorzimmer ? '#2563eb' : '#e2e8f0',
-                      border: 'none',
-                      borderRadius: 20,
-                      width: 44,
-                      height: 24,
-                      cursor: 'pointer',
-                      transition: 'all 0.3s',
-                      display: 'flex',
-                      alignItems: 'center',
-                      padding: '2px 4px',
-                    }}
-                  >
-                    <div style={{
-                      width: 18,
-                      height: 18,
-                      background: '#fff',
-                      borderRadius: '50%',
-                      transition: 'all 0.3s',
-                      marginLeft: useVorzimmer ? 18 : 0,
-                    }} />
-                  </button>
-                </div>
-
-                {useVorzimmer && (
-                  <div style={{ display: 'grid', gap: 10 }}>
-                    {VORZIMMER_PERSONAS.map((vz) => (
-                      <button
-                        key={vz.key}
-                        onClick={() => setSelectedVorzimmer(vz.key)}
-                        style={{
-                          padding: '12px 14px',
-                          background: selectedVorzimmer === vz.key ? '#2563eb' : '#f1f5f9',
-                          color: selectedVorzimmer === vz.key ? '#fff' : '#1e293b',
-                          border: 'none',
-                          borderRadius: 8,
-                          cursor: 'pointer',
-                          textAlign: 'left',
-                          fontSize: 13,
-                          fontWeight: 500,
-                          transition: 'all 0.2s',
-                        }}
-                      >
-                        <div>{vz.emoji} {vz.label}</div>
-                        <div style={{ fontSize: 11, opacity: 0.7, marginTop: 4 }}>
-                          {vz.difficulty}
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                )}
+            {/* Middle: Vorzimmer */}
+            <div style={{ background: '#fff', borderRadius: 10, padding: 14, boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                <h2 style={{ fontSize: 13, fontWeight: 700, margin: 0, color: '#1e293b' }}>
+                  🛡️ Vorzimmer
+                </h2>
+                <button
+                  onClick={() => setUseVorzimmer(!useVorzimmer)}
+                  style={{
+                    background: useVorzimmer ? '#2563eb' : '#e2e8f0',
+                    border: 'none',
+                    borderRadius: 20,
+                    width: 36,
+                    height: 20,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    padding: '2px 3px',
+                  }}
+                >
+                  <div style={{
+                    width: 14,
+                    height: 14,
+                    background: '#fff',
+                    borderRadius: '50%',
+                    transition: 'all 0.3s',
+                    marginLeft: useVorzimmer ? 14 : 0,
+                  }} />
+                </button>
               </div>
 
-              {/* Custom Persona Section */}
-              <div style={{ background: '#fff', borderRadius: 12, padding: 28, boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-                  <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0, color: '#1e293b', display: 'flex', alignItems: 'center', gap: 8 }}>
-                    ✏️ Benutzerdefiniert
-                  </h2>
-                  <button
-                    onClick={() => setUseCustom(!useCustom)}
-                    style={{
-                      background: useCustom ? '#2563eb' : '#e2e8f0',
-                      border: 'none',
-                      borderRadius: 20,
-                      width: 44,
-                      height: 24,
-                      cursor: 'pointer',
-                      transition: 'all 0.3s',
-                      display: 'flex',
-                      alignItems: 'center',
-                      padding: '2px 4px',
-                    }}
-                  >
-                    <div style={{
-                      width: 18,
-                      height: 18,
-                      background: '#fff',
-                      borderRadius: '50%',
-                      transition: 'all 0.3s',
-                      marginLeft: useCustom ? 18 : 0,
-                    }} />
-                  </button>
+              {useVorzimmer && (
+                <div style={{ display: 'grid', gap: 6 }}>
+                  {VORZIMMER_PERSONAS.map((vz) => (
+                    <button
+                      key={vz.key}
+                      onClick={() => setSelectedVorzimmer(vz.key)}
+                      style={{
+                        padding: '8px 10px',
+                        background: selectedVorzimmer === vz.key ? '#2563eb' : '#f1f5f9',
+                        color: selectedVorzimmer === vz.key ? '#fff' : '#1e293b',
+                        border: 'none',
+                        borderRadius: 6,
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                        fontSize: 10,
+                        fontWeight: 500,
+                      }}
+                    >
+                      <div>{vz.emoji} {vz.label}</div>
+                      <div style={{ fontSize: 8, opacity: 0.7 }}>
+                        {vz.difficulty}
+                      </div>
+                    </button>
+                  ))}
                 </div>
+              )}
+            </div>
 
-                {useCustom && (
-                  <div style={{ display: 'grid', gap: 10 }}>
-                    <input
-                      type="text"
-                      placeholder="Name"
-                      value={personaName}
-                      onChange={(e) => setPersonaName(e.target.value)}
-                      style={{ padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: 6, fontSize: 13 }}
-                    />
-                    <input
-                      type="text"
-                      placeholder="Unternehmen"
-                      value={personaCompany}
-                      onChange={(e) => setPersonaCompany(e.target.value)}
-                      style={{ padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: 6, fontSize: 13 }}
-                    />
-                    <input
-                      type="text"
-                      placeholder="Rolle"
-                      value={personaRole}
-                      onChange={(e) => setPersonaRole(e.target.value)}
-                      style={{ padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: 6, fontSize: 13 }}
-                    />
-                    <textarea
-                      placeholder="Beschreibung & Kontext"
-                      value={personaDescription}
-                      onChange={(e) => setPersonaDescription(e.target.value)}
-                      style={{ padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: 6, fontSize: 13, minHeight: 80 }}
-                    />
-                  </div>
-                )}
+            {/* Right: Custom Persona */}
+            <div style={{ background: '#fff', borderRadius: 10, padding: 14, boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                <h2 style={{ fontSize: 13, fontWeight: 700, margin: 0, color: '#1e293b' }}>
+                  ✏️ Benutzerdefiniert
+                </h2>
+                <button
+                  onClick={() => setUseCustom(!useCustom)}
+                  style={{
+                    background: useCustom ? '#2563eb' : '#e2e8f0',
+                    border: 'none',
+                    borderRadius: 20,
+                    width: 36,
+                    height: 20,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    padding: '2px 3px',
+                  }}
+                >
+                  <div style={{
+                    width: 14,
+                    height: 14,
+                    background: '#fff',
+                    borderRadius: '50%',
+                    marginLeft: useCustom ? 14 : 0,
+                  }} />
+                </button>
               </div>
+
+              {useCustom && (
+                <div style={{ display: 'grid', gap: 6 }}>
+                  <input
+                    type="text"
+                    placeholder="Name"
+                    value={personaName}
+                    onChange={(e) => setPersonaName(e.target.value)}
+                    style={{ padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: 6, fontSize: 10 }}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Unternehmen"
+                    value={personaCompany}
+                    onChange={(e) => setPersonaCompany(e.target.value)}
+                    style={{ padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: 6, fontSize: 10 }}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Rolle"
+                    value={personaRole}
+                    onChange={(e) => setPersonaRole(e.target.value)}
+                    style={{ padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: 6, fontSize: 10 }}
+                  />
+                  <textarea
+                    placeholder="Beschreibung"
+                    value={personaDescription}
+                    onChange={(e) => setPersonaDescription(e.target.value)}
+                    style={{ padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: 6, fontSize: 10, minHeight: 60 }}
+                  />
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Error Message */}
-          {error && (
-            <div style={{ background: '#fee2e2', border: '1px solid #fca5a5', color: '#991b1b', padding: '12px 16px', borderRadius: 8, marginBottom: 20, fontSize: 13 }}>
-              {error}
-            </div>
-          )}
-
-          {/* Start Button */}
-          <div style={{ textAlign: 'center' }}>
+          {/* Error & Button */}
+          <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {error && (
+              <div style={{ background: '#fee2e2', border: '1px solid #fca5a5', color: '#991b1b', padding: '8px 12px', borderRadius: 6, fontSize: 11 }}>
+                {error}
+              </div>
+            )}
             <button
               onClick={startSession}
               style={{
-                padding: '14px 40px',
+                padding: '10px 24px',
                 background: '#2563eb',
                 color: '#fff',
                 border: 'none',
                 borderRadius: 8,
                 cursor: 'pointer',
-                fontSize: 15,
+                fontSize: 13,
                 fontWeight: 700,
-                boxShadow: '0 4px 6px rgba(37, 99, 235, 0.2)',
-                transition: 'all 0.2s',
-              }}
-              onMouseOver={(e) => {
-                (e.target as HTMLButtonElement).style.background = '#1d4ed8';
-                (e.target as HTMLButtonElement).style.boxShadow = '0 6px 12px rgba(37, 99, 235, 0.3)';
-              }}
-              onMouseOut={(e) => {
-                (e.target as HTMLButtonElement).style.background = '#2563eb';
-                (e.target as HTMLButtonElement).style.boxShadow = '0 4px 6px rgba(37, 99, 235, 0.2)';
               }}
             >
               🎬 Roleplay Starten
@@ -574,23 +554,20 @@ export default function TextRoleplay() {
 
   // ── Chat Screen ──────────────────────────────────────────────────────────────
   return (
-    <div style={{ minHeight: '100vh', background: '#ffffff', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ height: '100vh', background: '#ffffff', display: 'flex', flexDirection: 'column' }}>
       {/* Header */}
-      <div style={{ padding: '20px 24px', background: 'linear-gradient(135deg, #f0f4f8 0%, #ffffff 100%)', borderBottom: '1px solid #e2e8f0' }}>
-        <div style={{ maxWidth: 620, margin: '0 auto' }}>
-          <h1 style={{ fontSize: 20, fontWeight: 700, margin: '0 0 4px 0', color: '#1e293b' }}>
-            💬 {activeCustomPersona?.name || 'Customer'}
-          </h1>
-          <p style={{ fontSize: 12, color: '#64748b', margin: 0 }}>
-            {activeCustomPersona?.company} · {activeCustomPersona?.role}
-          </p>
-        </div>
+      <div style={{ padding: '10px 16px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', flexShrink: 0 }}>
+        <h1 style={{ fontSize: 14, fontWeight: 700, margin: '0 0 2px 0', color: '#1e293b' }}>
+          💬 {activeCustomPersona?.name || 'Customer'}
+        </h1>
+        <p style={{ fontSize: 10, color: '#64748b', margin: 0 }}>
+          {activeCustomPersona?.company} · {activeCustomPersona?.role}
+        </p>
       </div>
 
       {/* Chat Container */}
-      <div style={{ flex: 1, overflow: 'auto', padding: '20px 24px', maxWidth: 620, margin: '0 auto', width: '100%' }}>
-        {/* Conversation */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <div style={{ flex: 1, overflow: 'auto', padding: '12px 16px', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {conversation.map((item) => (
             <div
               key={item.id}
@@ -598,41 +575,40 @@ export default function TextRoleplay() {
                 display: 'flex',
                 justifyContent: item.speaker === 'rep' ? 'flex-end' : 'flex-start',
                 alignItems: item.speaker === 'system' ? 'center' : 'flex-end',
-                gap: 8,
+                gap: 6,
               }}
             >
               {item.speaker === 'system' && (
-                <div style={{ fontSize: 12, color: '#94a3b8', fontStyle: 'italic', textAlign: 'center', width: '100%' }}>
+                <div style={{ fontSize: 10, color: '#94a3b8', fontStyle: 'italic', textAlign: 'center', width: '100%' }}>
                   {item.text}
                 </div>
               )}
               {item.speaker !== 'system' && (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: item.speaker === 'rep' ? 'flex-end' : 'flex-start', gap: 4 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: item.speaker === 'rep' ? 'flex-end' : 'flex-start', gap: 2 }}>
                   <div
                     style={{
-                      maxWidth: '70%',
-                      padding: '11px 14px',
-                      borderRadius: 10,
+                      maxWidth: '75%',
+                      padding: '8px 10px',
+                      borderRadius: 8,
                       background: item.speaker === 'rep' ? '#2563eb' : '#e2e8f0',
                       color: item.speaker === 'rep' ? '#fff' : '#1e293b',
                       wordWrap: 'break-word',
-                      fontSize: 13,
-                      lineHeight: 1.5,
+                      fontSize: 11,
+                      lineHeight: 1.4,
                     }}
                   >
                     {item.text}
                   </div>
                   {responseTime !== null && item.speaker === 'customer' && (
-                    <div style={{ fontSize: 11, color: '#94a3b8' }}>⏱️ {responseTime}s</div>
+                    <div style={{ fontSize: 9, color: '#94a3b8' }}>⏱️ {responseTime}s</div>
                   )}
                 </div>
               )}
             </div>
           ))}
           {isProcessing && (
-            <div style={{ fontSize: 12, color: '#64748b', fontStyle: 'italic', display: 'flex', gap: 6, alignItems: 'center' }}>
-              <span>Customer antwortet</span>
-              <span style={{ animation: 'pulse 1.5s infinite', animationName: 'pulse' }}>•••</span>
+            <div style={{ fontSize: 10, color: '#64748b', fontStyle: 'italic' }}>
+              Customer antwortet...
             </div>
           )}
           <div ref={bottomRef} />
@@ -641,40 +617,27 @@ export default function TextRoleplay() {
 
       {/* Review Section */}
       {sessionEnded && review && (
-        <div style={{ maxWidth: 620, margin: '0 auto', width: '100%', padding: '0 24px 20px' }}>
-          <div style={{ background: '#f0f9ff', border: '1px solid #bfdbfe', borderRadius: 10, padding: 20 }}>
-            <h2 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 14px 0', color: '#1e40af' }}>
-              📊 Coaching-Feedback
+        <div style={{ padding: '8px 16px', borderTop: '1px solid #e2e8f0', maxHeight: '35%', overflow: 'auto' }}>
+          <div style={{ background: '#f0f9ff', border: '1px solid #bfdbfe', borderRadius: 8, padding: 10 }}>
+            <h2 style={{ fontSize: 12, fontWeight: 700, margin: '0 0 6px 0', color: '#1e40af' }}>
+              📊 Feedback • Score: {review.score}/100
             </h2>
-            <div style={{ fontSize: 14, fontWeight: 700, color: '#1e40af', marginBottom: 12 }}>
-              Score: {review.score}/100
-            </div>
-
             {review.strengths.length > 0 && (
-              <div style={{ marginBottom: 14 }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: '#1e40af', marginBottom: 6 }}>
-                  ✅ Stärken:
-                </div>
-                <ul style={{ margin: 0, paddingLeft: 20 }}>
-                  {review.strengths.map((s, i) => (
-                    <li key={i} style={{ fontSize: 12, color: '#1e40af', marginBottom: 4 }}>
-                      {s}
-                    </li>
+              <div style={{ marginBottom: 8, fontSize: 10 }}>
+                <div style={{ fontWeight: 700, color: '#1e40af', marginBottom: 2 }}>✅ Stärken:</div>
+                <ul style={{ margin: 0, paddingLeft: 16 }}>
+                  {review.strengths.slice(0, 2).map((s, i) => (
+                    <li key={i} style={{ color: '#1e40af', marginBottom: 1 }}>{s}</li>
                   ))}
                 </ul>
               </div>
             )}
-
             {review.improvements.length > 0 && (
-              <div>
-                <div style={{ fontSize: 12, fontWeight: 700, color: '#1e40af', marginBottom: 6 }}>
-                  💡 Verbesserungen:
-                </div>
-                <ul style={{ margin: 0, paddingLeft: 20 }}>
-                  {review.improvements.map((imp, i) => (
-                    <li key={i} style={{ fontSize: 12, color: '#1e40af', marginBottom: 4 }}>
-                      {imp}
-                    </li>
+              <div style={{ fontSize: 10 }}>
+                <div style={{ fontWeight: 700, color: '#1e40af', marginBottom: 2 }}>💡 Verbesserungen:</div>
+                <ul style={{ margin: 0, paddingLeft: 16 }}>
+                  {review.improvements.slice(0, 2).map((imp, i) => (
+                    <li key={i} style={{ color: '#1e40af', marginBottom: 1 }}>{imp}</li>
                   ))}
                 </ul>
               </div>
@@ -684,89 +647,87 @@ export default function TextRoleplay() {
       )}
 
       {/* Input Form & Buttons */}
-      <div style={{ padding: '20px 24px', background: '#f8fafc', borderTop: '1px solid #e2e8f0' }}>
-        <div style={{ maxWidth: 620, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {!sessionEnded && (
-            <form onSubmit={handleTextSubmit} style={{ display: 'flex', gap: 10 }}>
-              <input
-                type="text"
-                value={textInput}
-                onChange={(e) => setTextInput(e.target.value)}
-                placeholder="Deine Nachricht..."
-                disabled={isProcessing}
-                style={{
-                  flex: 1,
-                  padding: '11px 14px',
-                  border: '1px solid #cbd5e1',
-                  borderRadius: 8,
-                  fontSize: 13,
-                  fontFamily: 'inherit',
-                }}
-              />
-              <button
-                type="submit"
-                disabled={isProcessing || !textInput.trim()}
-                style={{
-                  padding: '11px 16px',
-                  background: '#2563eb',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: 8,
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                  fontSize: 13,
-                }}
-              >
-                {isProcessing ? '⏳' : '📤'}
-              </button>
-            </form>
-          )}
+      <div style={{ padding: '10px 16px', background: '#f8fafc', borderTop: '1px solid #e2e8f0', flexShrink: 0 }}>
+        {!sessionEnded && (
+          <form onSubmit={handleTextSubmit} style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
+            <input
+              type="text"
+              value={textInput}
+              onChange={(e) => setTextInput(e.target.value)}
+              placeholder="Nachricht..."
+              disabled={isProcessing}
+              style={{
+                flex: 1,
+                padding: '7px 10px',
+                border: '1px solid #cbd5e1',
+                borderRadius: 6,
+                fontSize: 11,
+                fontFamily: 'inherit',
+              }}
+            />
+            <button
+              type="submit"
+              disabled={isProcessing || !textInput.trim()}
+              style={{
+                padding: '7px 10px',
+                background: '#2563eb',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 6,
+                cursor: 'pointer',
+                fontWeight: 600,
+                fontSize: 11,
+              }}
+            >
+              {isProcessing ? '⏳' : '📤'}
+            </button>
+          </form>
+        )}
 
-          <div style={{ display: 'flex', gap: 10 }}>
-            {!sessionEnded ? (
-              <button
-                onClick={handleEndRoleplay}
-                disabled={isReviewing}
-                style={{
-                  flex: 1,
-                  padding: '11px 16px',
-                  background: '#ef4444',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: 8,
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                  fontSize: 13,
-                }}
-              >
-                {isReviewing ? '⏳ Analysieren...' : '⏹️ Beenden & Analysieren'}
-              </button>
-            ) : (
-              <button
-                onClick={resetConversation}
-                style={{
-                  flex: 1,
-                  padding: '11px 16px',
-                  background: '#2563eb',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: 8,
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                  fontSize: 13,
-                }}
-              >
-                🔄 Neue Session
-              </button>
-            )}
-          </div>
-
-          {error && (
-            <div style={{ padding: '10px 12px', background: '#fee2e2', border: '1px solid #fca5a5', borderRadius: 6, color: '#991b1b', fontSize: 12 }}>
-              {error}
-            </div>
+        <div style={{ display: 'flex', gap: 6 }}>
+          {!sessionEnded ? (
+            <button
+              onClick={handleEndRoleplay}
+              disabled={isReviewing}
+              style={{
+                flex: 1,
+                padding: '7px 10px',
+                background: '#ef4444',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 6,
+                cursor: 'pointer',
+                fontWeight: 600,
+                fontSize: 11,
+              }}
+            >
+              {isReviewing ? '⏳' : '⏹️ Beenden'}
+            </button>
+          ) : (
+            <button
+              onClick={resetConversation}
+              style={{
+                flex: 1,
+                padding: '7px 10px',
+                background: '#2563eb',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 6,
+                cursor: 'pointer',
+                fontWeight: 600,
+                fontSize: 11,
+              }}
+            >
+              🔄 Neu
+            </button>
           )}
         </div>
+
+        {error && (
+          <div style={{ marginTop: 6, padding: '6px 10px', background: '#fee2e2', border: '1px solid #fca5a5', borderRadius: 6, color: '#991b1b', fontSize: 10 }}>
+            {error}
+          </div>
+        )}
       </div>
     </div>
   );
