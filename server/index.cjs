@@ -12,6 +12,9 @@ app.use(cors({ origin: ['http://localhost:5173', 'http://localhost:5174', 'http:
 app.use(express.json());
 app.use(express.text({ type: 'text/event-stream' }));
 
+// Serve frontend static files
+app.use(express.static('dist'));
+
 // ── Clients ─────────────────────────────────────────────────────────────────
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -218,9 +221,14 @@ Antworte AUSSCHLIESSLICH mit gültigem JSON (kein Markdown):
   }
 });
 
+// ── Fallback to index.html for SPA ──────────────────────────────────────────
+app.get('*', (req, res) => {
+  res.sendFile(__dirname + '/dist/index.html');
+});
+
 // ── Start server ────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
   console.log(`✅ Roleplay Demo Server running on port ${PORT}`);
   console.log(`📍 API Base: http://localhost:${PORT}`);
-  console.log(`🎯 Frontend: http://localhost:5174`);
+  console.log(`🎯 Frontend: http://localhost:${PORT}`);
 });
