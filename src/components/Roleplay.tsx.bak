@@ -1,0 +1,478 @@
+import React, { useState, useRef } from 'react';
+
+type Message = {
+  id: number;
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+};
+
+const INDUSTRIES = [
+  { key: 'saas', label: 'SaaS / Software', emoji: '💻' },
+  { key: 'ecommerce', label: 'E-Commerce / Retail', emoji: '🛒' },
+  { key: 'manufacturing', label: 'Produktion / Industrie', emoji: '🏭' },
+  { key: 'finance', label: 'Finance / Fintech', emoji: '💰' },
+  { key: 'healthcare', label: 'Healthcare / MedTech', emoji: '🏥' },
+  { key: 'consulting', label: 'Consulting / Agentur', emoji: '📊' },
+  { key: 'logistics', label: 'Logistik / Supply Chain', emoji: '🚛' },
+  { key: 'realestate', label: 'Immobilien', emoji: '🏠' },
+  { key: 'hr', label: 'HR / Recruiting', emoji: '👥' },
+  { key: 'marketing', label: 'Marketing / Media', emoji: '📣' },
+];
+
+const PERSONALITIES = [
+  { key: '', label: 'Zufällig', emoji: '🎲', description: 'Persönlichkeit wird automatisch gewählt' },
+  { key: 'friendly', label: 'Freundlich', emoji: '😊', description: 'Offen, gesprächsbereit, positiv eingestellt' },
+  { key: 'skeptical', label: 'Skeptisch', emoji: '🤔', description: 'Hinterfragt alles, möchte Beweise sehen' },
+  { key: 'busy', label: 'Beschäftigt', emoji: '⏱️', description: 'Wenig Zeit, kommt schnell zum Punkt' },
+  { key: 'priceSensitive', label: 'Preissensitiv', emoji: '💶', description: 'Fokus auf Kosten und ROI' },
+  { key: 'curious', label: 'Neugierig', emoji: '🔍', description: 'Stellt viele Fragen, möchte Details verstehen' },
+  { key: 'dismissive', label: 'Abweisend', emoji: '🚫', description: 'Wenig Interesse, schwer zu begeistern' },
+];
+
+type Screen = 'setup' | 'chat' | 'results';
+
+type SessionConfig = {
+  industry: string;
+  isGatekeeper: boolean;
+  personality: string;
+  difficulty: number;
+};
+
+type ReviewResult = {
+  score: number;
+  feedback: string[];
+  strengths: string[];
+  improvements: string[];
+};
+
+export default function Roleplay() {
+  const [screen, setScreen] = useState<Screen>('setup');
+  const [config, setConfig] = useState<SessionConfig>({
+    industry: '',
+    isGatekeeper: false,
+    personality: '',
+    difficulty: 3,
+  });
+
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [review, setReview] = useState<ReviewResult | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // ── SETUP SCREEN ─────────────────────────────────────────────────────────
+  const handleStartSession = () => {
+    if (!config.industry || !config.personality) {
+      alert('Bitte wähle eine Branche und Persona aus!');
+      return;
+    }
+    setMessages([
+      {
+        id: 0,
+        role: 'system',
+        content: `Roleplay startet. Branche: ${INDUSTRIES.find(i => i.key === config.industry)?.label}, Schwierigkeit: ${config.difficulty}/5`,
+      },
+      {
+        id: 1,
+        role: 'assistant',
+        content: `Hallo! Ich bin dein Gesprächspartner. ${config.isGatekeeper ? '(Vorzimmer/Gatekeeper)' : ''} Was kann ich für dich tun?`,
+      },
+    ]);
+    setScreen('chat');
+  };
+
+  // ── CHAT SCREEN ──────────────────────────────────────────────────────────
+  const handleSend = async () => {
+    if (!input.trim() || loading) return;
+
+    const userMessage: Message = {
+      id: Date.now(),
+      role: 'user',
+      content: input,
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
+    setInput('');
+    setLoading(true);
+
+    try {
+      const response = await fetch('/api/chat/stream', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: messages.map((m) => ({ role: m.role, content: m.content })),
+          scenario: `Industry: ${config.industry}, IsGatekeeper: ${config.isGatekeeper}, Difficulty: ${config.difficulty}/5`,
+          persona: config.personality,
+        }),
+      });
+
+      if (!response.body) throw new Error('No response body');
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let fullText = '';
+      let assistantId = Date.now() + 1;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+        const lines = chunk.split('\n').filter((line) => line.startsWith('data:'));
+
+        for (const line of lines) {
+          try {
+            const data = JSON.parse(line.replace('data:', ''));
+            if (data.text) {
+              fullText += data.text;
+              setMessages((prev) => {
+                const last = prev[prev.length - 1];
+                if (last?.role === 'assistant' && last.id === assistantId) {
+                  return [...prev.slice(0, -1), { ...last, content: fullText }];
+                }
+                return [
+                  ...prev,
+                  { id: assistantId, role: 'assistant', content: fullText },
+                ];
+              });
+            }
+          } catch (e) {
+            // ignore
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now(),
+          role: 'system',
+          content: 'Fehler: Konnte keine Verbindung zum Server herstellen',
+        },
+      ]);
+    } finally {
+      setLoading(false);
+      inputRef.current?.focus();
+    }
+  };
+
+  const handleEndSession = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch('/api/chat/review', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: messages.map((m) => ({ role: m.role, content: m.content })),
+          config,
+        }),
+      });
+
+      const data = await response.json();
+      setReview(data);
+      setScreen('results');
+    } catch (error) {
+      console.error('Review error:', error);
+      // Fallback review
+      setReview({
+        score: 72,
+        feedback: ['Gutes Gespräch! Arbeite noch an deinen Abschlussfragen.'],
+        strengths: ['Aktives Zuhören', 'Gute Fragen gestellt'],
+        improvements: ['Mehr Verkaufsargumente', 'Bessere Abschluss-Strategie'],
+      });
+      setScreen('results');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // RENDER
+  // ══════════════════════════════════════════════════════════════════════════
+
+  if (screen === 'setup') {
+    return (
+      <div style={{ minHeight: '100vh', background: '#f9fafb', padding: '40px 20px', fontFamily: 'Inter, sans-serif' }}>
+        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+          <h1 style={{ fontSize: '28px', fontWeight: 700, marginBottom: '8px', color: '#0f172a' }}>
+            🎯 Roleplay Training
+          </h1>
+          <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '32px' }}>
+            Wähle deine Einstellungen und trainiere deine Sales-Fähigkeiten
+          </p>
+
+          {/* Industry Selection */}
+          <div style={{ marginBottom: '32px' }}>
+            <label style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a', marginBottom: '12px', display: 'block' }}>
+              🏢 Welche Branche?
+            </label>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
+              {INDUSTRIES.map((ind) => (
+                <button
+                  key={ind.key}
+                  onClick={() => setConfig({ ...config, industry: ind.key })}
+                  style={{
+                    padding: '16px',
+                    borderRadius: '8px',
+                    border: config.industry === ind.key ? '2px solid #2563eb' : '1px solid #e5e7eb',
+                    background: config.industry === ind.key ? '#eff6ff' : '#ffffff',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    textAlign: 'left',
+                  }}
+                >
+                  {ind.emoji} {ind.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Gatekeeper */}
+          <div style={{ marginBottom: '32px' }}>
+            <label style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={config.isGatekeeper}
+                onChange={(e) => setConfig({ ...config, isGatekeeper: e.target.checked })}
+                style={{ cursor: 'pointer' }}
+              />
+              🚪 Vorzimmer / Gatekeeper
+            </label>
+            <p style={{ fontSize: '12px', color: '#6b7280', margin: 0 }}>
+              Der Gesprächspartner ist das Vorzimmer und wird dich filtern
+            </p>
+          </div>
+
+          {/* Personality */}
+          <div style={{ marginBottom: '32px' }}>
+            <label style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a', marginBottom: '12px', display: 'block' }}>
+              😊 Persönlichkeit
+            </label>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {PERSONALITIES.map((pers) => (
+                <button
+                  key={pers.key}
+                  onClick={() => setConfig({ ...config, personality: pers.key })}
+                  style={{
+                    padding: '12px',
+                    borderRadius: '8px',
+                    border: config.personality === pers.key ? '2px solid #2563eb' : '1px solid #e5e7eb',
+                    background: config.personality === pers.key ? '#eff6ff' : '#ffffff',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    fontSize: '13px',
+                  }}
+                >
+                  <div style={{ fontWeight: 600, marginBottom: '4px' }}>
+                    {pers.emoji} {pers.label}
+                  </div>
+                  <div style={{ fontSize: '12px', color: '#6b7280' }}>
+                    {pers.description}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Difficulty */}
+          <div style={{ marginBottom: '32px' }}>
+            <label style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a', marginBottom: '12px', display: 'block' }}>
+              ⚡ Schwierigkeit: {config.difficulty}/5
+            </label>
+            <input
+              type="range"
+              min="1"
+              max="5"
+              value={config.difficulty}
+              onChange={(e) => setConfig({ ...config, difficulty: parseInt(e.target.value) })}
+              style={{ width: '100%', cursor: 'pointer' }}
+            />
+            <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '8px' }}>
+              {config.difficulty === 1 && '🟢 Einfach - Freundlicher Gesprächspartner'}
+              {config.difficulty === 2 && '🟡 Leicht - Etwas kritischer'}
+              {config.difficulty === 3 && '🟠 Mittel - Realistisch'}
+              {config.difficulty === 4 && '🔴 Schwer - Sehr kritisch'}
+              {config.difficulty === 5 && '⚫ Sehr Schwer - Extrem anspruchsvoll'}
+            </div>
+          </div>
+
+          {/* Start Button */}
+          <button
+            onClick={handleStartSession}
+            style={{
+              width: '100%',
+              padding: '14px',
+              background: '#2563eb',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '16px',
+              fontWeight: 700,
+              cursor: 'pointer',
+            }}
+          >
+            🎬 Training starten
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (screen === 'chat') {
+    return (
+      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: '#ffffff', fontFamily: 'Inter, sans-serif' }}>
+        {/* Header */}
+        <div style={{ padding: '20px', borderBottom: '1px solid #e5e7eb', background: '#f9fafb' }}>
+          <h2 style={{ margin: '0 0 4px', fontSize: '18px', fontWeight: 700, color: '#0f172a' }}>
+            💬 Text-Chat Roleplay
+          </h2>
+          <p style={{ margin: 0, fontSize: '12px', color: '#6b7280' }}>
+            Branche: {INDUSTRIES.find(i => i.key === config.industry)?.label} | Schwierigkeit: {config.difficulty}/5
+          </p>
+        </div>
+
+        {/* Messages */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {messages.map((msg) => (
+            <div key={msg.id} style={{ display: 'flex', justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
+              <div
+                style={{
+                  maxWidth: '70%',
+                  padding: '12px 16px',
+                  borderRadius: '8px',
+                  background:
+                    msg.role === 'user' ? '#2563eb' :
+                      msg.role === 'system' ? '#f3f4f6' : '#f9fafb',
+                  color: msg.role === 'user' ? '#ffffff' : '#0f172a',
+                  fontSize: '14px',
+                  lineHeight: '1.5',
+                  border: msg.role === 'system' ? '1px solid #e5e7eb' : 'none',
+                }}
+              >
+                {msg.content}
+              </div>
+            </div>
+          ))}
+          {loading && (
+            <div style={{ display: 'flex', gap: '4px' }}>
+              <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#d1d5db', animation: 'bounce 1.4s infinite' }} />
+              <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#d1d5db', animation: 'bounce 1.4s infinite', animationDelay: '0.2s' }} />
+              <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#d1d5db', animation: 'bounce 1.4s infinite', animationDelay: '0.4s' }} />
+            </div>
+          )}
+        </div>
+
+        {/* Input */}
+        <div style={{ padding: '20px', borderTop: '1px solid #e5e7eb', background: '#f9fafb', display: 'flex', gap: '8px' }}>
+          <input
+            ref={inputRef}
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+            placeholder="Deine Nachricht..."
+            disabled={loading}
+            style={{ flex: 1, padding: '12px 16px', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '14px', outline: 'none' }}
+          />
+          <button
+            onClick={handleSend}
+            disabled={loading || !input.trim()}
+            style={{ padding: '12px 24px', background: loading || !input.trim() ? '#d1d5db' : '#2563eb', color: '#ffffff', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}
+          >
+            Senden
+          </button>
+          <button
+            onClick={handleEndSession}
+            disabled={loading}
+            style={{ padding: '12px 24px', background: '#6b7280', color: '#ffffff', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}
+          >
+            Ende
+          </button>
+        </div>
+
+        <style>{`@keyframes bounce { 0%, 80%, 100% { opacity: 0.5; } 40% { opacity: 1; } }`}</style>
+      </div>
+    );
+  }
+
+  if (screen === 'results' && review) {
+    return (
+      <div style={{ minHeight: '100vh', background: '#f9fafb', padding: '40px 20px', fontFamily: 'Inter, sans-serif' }}>
+        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+          <h1 style={{ fontSize: '28px', fontWeight: 700, marginBottom: '32px', color: '#0f172a' }}>
+            📊 Deine Ergebnisse
+          </h1>
+
+          {/* Score Card */}
+          <div style={{ background: '#ffffff', borderRadius: '12px', padding: '32px', marginBottom: '24px', textAlign: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+            <div style={{ fontSize: '48px', fontWeight: 700, color: review.score >= 75 ? '#10b981' : review.score >= 50 ? '#f59e0b' : '#ef4444', marginBottom: '8px' }}>
+              {review.score}%
+            </div>
+            <div style={{ fontSize: '16px', fontWeight: 600, color: '#0f172a', marginBottom: '8px' }}>
+              Performance Score
+            </div>
+            <div style={{ fontSize: '14px', color: '#6b7280' }}>
+              {review.score >= 75 ? '🟢 Hervorragend!' : review.score >= 50 ? '🟡 Gut, aber ausbaufähig' : '🔴 Viel Potential zum Wachstum'}
+            </div>
+          </div>
+
+          {/* Strengths */}
+          {review.strengths.length > 0 && (
+            <div style={{ background: '#ffffff', borderRadius: '12px', padding: '20px', marginBottom: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+              <h3 style={{ margin: '0 0 12px', fontSize: '16px', fontWeight: 700, color: '#10b981' }}>
+                ✅ Deine Stärken
+              </h3>
+              <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '14px', color: '#0f172a' }}>
+                {review.strengths.map((s, i) => (
+                  <li key={i} style={{ marginBottom: '8px' }}>{s}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Improvements */}
+          {review.improvements.length > 0 && (
+            <div style={{ background: '#ffffff', borderRadius: '12px', padding: '20px', marginBottom: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+              <h3 style={{ margin: '0 0 12px', fontSize: '16px', fontWeight: 700, color: '#ef4444' }}>
+                🎯 Verbesserungspotential
+              </h3>
+              <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '14px', color: '#0f172a' }}>
+                {review.improvements.map((imp, i) => (
+                  <li key={i} style={{ marginBottom: '8px' }}>{imp}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Feedback */}
+          {review.feedback.length > 0 && (
+            <div style={{ background: '#eff6ff', borderRadius: '12px', padding: '20px', marginBottom: '24px', borderLeft: '4px solid #2563eb' }}>
+              <h3 style={{ margin: '0 0 12px', fontSize: '16px', fontWeight: 700, color: '#2563eb' }}>
+                💡 Coaching Tipps
+              </h3>
+              <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '14px', color: '#1e40af' }}>
+                {review.feedback.map((f, i) => (
+                  <li key={i} style={{ marginBottom: '8px' }}>{f}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Buttons */}
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <button
+              onClick={() => { setScreen('setup'); setMessages([]); setReview(null); }}
+              style={{ flex: 1, padding: '14px', background: '#2563eb', color: '#ffffff', border: 'none', borderRadius: '8px', fontSize: '16px', fontWeight: 700, cursor: 'pointer' }}
+            >
+              🔄 Nächste Session
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
+}

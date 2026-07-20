@@ -1,0 +1,727 @@
+﻿/* ═══════════════════════════════════════════════════════════════════════════
+   SALEZ DASHBOARD — DESIGN SYSTEM
+   Inspired by Linear · Stripe · Salesforce
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Google Fonts: Inter ─────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+/* ── Design Tokens ───────────────────────────────────────────────────────── */
+:root {
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+
+  /* ── Sidebar ── */
+  --sidebar-bg:           #0C1220;
+  --sidebar-border:       rgba(255,255,255,0.06);
+  --sidebar-hover:        rgba(255,255,255,0.05);
+  --sidebar-active-bg:    rgba(37,99,235,0.14);
+  --sidebar-active-bdr:   #2563eb;
+  --sidebar-txt:          #8B95A8;
+  --sidebar-txt-active:   #F8FAFC;
+  --sidebar-group-txt:    #4B5A6E;
+  --sidebar-icon-active:  #60a5fa;
+  --sidebar-width:        260px;
+
+  /* ── Content ── */
+  --bg:                   #ffffff;
+  --card-bg:              #ffffff;
+  --card-border:          rgba(15,23,42,0.07);
+  --card-radius:          20px;
+  --card-shadow:          0 4px 24px rgba(15,23,42,0.06);
+  --card-shadow-hover:    0 12px 40px rgba(15,23,42,0.10), 0 0 0 1px rgba(37,99,235,0.06);
+
+  /* ── Brand / Accent ── */
+  --accent:               #2563eb;
+  --accent-hover:         #1d4ed8;
+  --accent-light:         #eff6ff;
+  --accent-mid:           #bfdbfe;
+  --accent-3:             #93c5fd;
+  --accent-4:             #60a5fa;
+  --accent-soft:          #dbeafe;
+  --accent-900:           #1e3a8a;
+  --accent-950:           #0a2463;
+  --accent-gradient:      linear-gradient(135deg, #1e3a8a, #2563eb);
+  --brand-navy:           #0a2463;
+  --role-manager-bg:      #eff6ff;
+  --role-manager-text:    #1e3a8a;
+
+  /* ── Text ── */
+  --txt-primary:          #0F172A;
+  --txt-secondary:        #475569;
+  --txt-dark:             #334155;
+  /* C7: #94A3B8 is ~3.1:1 contrast on white (fails WCAG AA 4.5:1).
+     Use #64748B (4.6:1) as the minimum muted color for body text.
+     Reserve #94A3B8 for decorative/large-text-only use (≥18px = 3:1 passes). */
+  --txt-muted:            #64748B;
+  --txt-muted-decorative: #94A3B8; /* large text / icons only */
+  --txt-label:            #64748B;
+
+  /* ── Status ── */
+  --green:                #10B981;
+  --green-light:          #D1FAE5;
+  --green-mid:            #BBF7D0;
+  --green-soft:           #F0FDF4;
+  --green-600:            #16A34A;
+  --green-700:            #15803D;
+  --green-dark:           #166534;
+  --amber:                #F59E0B;
+  --amber-light:          #FEF3C7;
+  --amber-soft:           #FEF9C3;
+  --amber-mid:            #FDE68A;
+  --amber-dark:           #92400E;
+  --amber-700:            #B45309;
+  --amber-800:            #854D0E;
+  --red:                  #EF4444;
+  --red-600:              #DC2626;
+  --red-light:            #FEE2E2;
+  --red-soft:             #FEF2F2;
+  --red-mid:              #FCA5A5;
+  --red-bright:           #FECACA;
+  --red-dark:             #991B1B;
+  --red-700:              #B91C1C;
+
+  /* ── Backgrounds ── */
+  --bg-subtle:            #f8fafb;
+
+  /* ── Borders / Dividers ── */
+  --border:               rgba(15,23,42,0.08);
+  --border-light:         rgba(15,23,42,0.05);
+
+  /* ── Radius ── */
+  --r-sm:   8px;
+  --r-md:   12px;
+  --r-lg:   16px;
+  --r-xl:   24px;
+
+  /* ── Shadows ── */
+  --shadow-xs: 0 1px 4px rgba(15,23,42,0.05);
+  --shadow-sm: 0 2px 12px rgba(15,23,42,0.06);
+  --shadow-md: var(--card-shadow);
+  --shadow-lg: 0 12px 40px rgba(15,23,42,0.10);
+  --shadow-xl: 0 24px 64px rgba(15,23,42,0.13);
+
+  /* ── Transitions ── */
+  --transition: 0.18s cubic-bezier(0.4,0,0.2,1);
+}
+
+/* ── Reset / Base ────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  text-size-adjust: 100%;
+  -webkit-text-size-adjust: 100%; /* fallback for older browsers */
+}
+
+body {
+  margin: 0;
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--txt-primary);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-width: 320px;
+}
+
+h1,h2,h3,h4,h5,h6 { margin: 0; font-family: var(--font); }
+
+a { text-decoration: none; color: var(--accent); }
+a:hover { color: var(--accent-hover); }
+
+/* ── C7: Skip-to-main link (screen readers + keyboard users) ─────────────── */
+.salez-skip-link {
+  position: absolute;
+  top: -100%;
+  left: 8px;
+  z-index: 9999;
+  background: var(--accent);
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 0 0 8px 8px;
+  font-weight: 700;
+  font-size: 14px;
+  text-decoration: none;
+  transition: top 0.1s;
+}
+.salez-skip-link:focus { top: 0; }
+
+/* Global button reset — component styles override these */
+button {
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  /* C8: Touch target minimum 44×44px */
+  min-height: 36px;
+  padding: 0.55em 1.1em;
+  background: transparent;
+  transition: all var(--transition);
+  -webkit-font-smoothing: antialiased;
+}
+/* C7: Visible focus ring on keyboard navigation */
+button:focus-visible,
+[role="button"]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+input, textarea, select {
+  font-family: var(--font);
+  font-size: 14px;
+  color: var(--txt-primary);
+}
+input:focus-visible, textarea:focus-visible, select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+input:focus, textarea:focus, select:focus { outline: none; }
+/* C7: override the none for keyboard users */
+input:focus-visible, textarea:focus-visible, select:focus-visible {
+  outline: 2px solid var(--accent) !important;
+}
+
+/* C7: All interactive elements need sufficient click/touch area */
+a, [role="button"] {
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* ── CSS Utility Classes ─────────────────────────────────────────────────── */
+
+/* Cards */
+.sz-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
+  box-shadow: var(--shadow-md);
+  padding: 24px;
+  transition: box-shadow var(--transition), transform var(--transition);
+}
+.sz-card:hover { box-shadow: var(--card-shadow-hover); }
+
+/* Section titles */
+.sz-section-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--txt-primary);
+  letter-spacing: -0.3px;
+  margin: 0 0 4px;
+}
+.sz-section-sub {
+  font-size: 13px;
+  color: var(--txt-muted);
+  margin: 0 0 20px;
+}
+
+/* Stat / KPI card */
+.sz-stat {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
+  padding: 20px 22px;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--transition);
+}
+.sz-stat:hover { box-shadow: var(--card-shadow-hover); }
+.sz-stat-num   { font-size: 30px; font-weight: 800; color: var(--txt-primary); line-height: 1; letter-spacing: -1px; }
+.sz-stat-label { font-size: 12px; font-weight: 600; color: var(--txt-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 6px; }
+.sz-stat-delta { font-size: 12px; font-weight: 600; margin-top: 8px; display: inline-flex; align-items: center; gap: 3px; }
+.sz-stat-delta.up   { color: var(--green); }
+.sz-stat-delta.down { color: var(--red); }
+
+/* Primary action button */
+.sz-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 20px;
+  border-radius: var(--r-sm);
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition);
+  white-space: nowrap;
+}
+.sz-btn-primary {
+  background: var(--accent-gradient);
+  color: #fff;
+  box-shadow: 0 2px 10px rgba(37,99,235,0.25);
+}
+.sz-btn-primary:hover {
+  opacity: 0.92;
+  box-shadow: 0 6px 20px rgba(37,99,235,0.38);
+  transform: translateY(-1px);
+}
+.sz-btn-ghost {
+  background: transparent;
+  color: var(--txt-secondary);
+  border: 1px solid var(--border);
+}
+.sz-btn-ghost:hover { background: var(--border-light); color: var(--txt-primary); }
+
+/* Badges */
+.sz-badge {
+  display: inline-flex; align-items: center;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.sz-badge-indigo { background: var(--accent-light); color: var(--accent); }
+.sz-badge-green  { background: var(--green-light);  color: var(--green-dark); }
+.sz-badge-amber  { background: var(--amber-light);  color: var(--amber-dark); }
+.sz-badge-red    { background: var(--red-light);    color: var(--red-dark); }
+.sz-badge-blue   { background: var(--accent-light); color: var(--accent); }
+.sz-badge-purple { background: var(--accent-light); color: var(--accent); }
+
+/* Form inputs — premium style */
+.sz-input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-sm);
+  font-size: 14px;
+  background: #fff;
+  color: var(--txt-primary);
+  transition: border-color var(--transition), box-shadow var(--transition);
+  box-sizing: border-box;
+}
+.sz-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
+}
+.sz-input::placeholder { color: var(--txt-muted); }
+
+/* Label */
+.sz-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--txt-label);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  display: block;
+}
+
+/* Divider */
+.sz-divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+
+/* Empty state */
+.sz-empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--txt-muted);
+  font-size: 14px;
+}
+
+/* Error box */
+.sz-error {
+  background: var(--red-light);
+  border: 1px solid #FCA5A5;
+  color: var(--red-dark);
+  border-radius: var(--r-sm);
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* Success box */
+.sz-success {
+  background: var(--green-light);
+  border: 1px solid #6EE7B7;
+  color: var(--green-dark);
+  border-radius: var(--r-sm);
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* ── Animations ──────────────────────────────────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+@keyframes audioPulse {
+  0%, 100% { opacity: 0.25; transform: scale(0.75); }
+  50%       { opacity: 1;    transform: scale(1);    }
+}
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes indeterminate-progress {
+  0%   { background-position: -200% 0; width: 10%; }
+  50%  { width: 80%; }
+  100% { background-position:  200% 0; width: 10%; }
+}
+
+/* ── Responsive Sidebar ──────────────────────────────────────────────────── */
+.salez-sidebar {
+  transition: width 0.22s cubic-bezier(0.4,0,0.2,1), transform 0.25s cubic-bezier(0.4,0,0.2,1);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(15,23,42,0.12) transparent;
+}
+.salez-sidebar::-webkit-scrollbar { width: 4px; }
+.salez-sidebar::-webkit-scrollbar-track { background: transparent; }
+.salez-sidebar::-webkit-scrollbar-thumb { background: rgba(15,23,42,0.12); border-radius: 999px; }
+.salez-content {
+  transition: margin-left 0.22s cubic-bezier(0.4,0,0.2,1), width 0.22s cubic-bezier(0.4,0,0.2,1);
+}
+.salez-hamburger {
+  display: none;
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 200;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--r-sm);
+  width: 38px;
+  height: 38px;
+  font-size: 16px;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-sm);
+}
+.salez-mobile-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(15,23,42,0.5);
+  backdrop-filter: blur(2px);
+  z-index: 99;
+}
+.salez-content {
+  margin-left: var(--sidebar-width);
+  width: calc(100% - var(--sidebar-width));
+  overflow-x: hidden;
+}
+
+/* ── Responsive Grids ────────────────────────────────────────────────────── */
+.salez-stats-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 24px; }
+.salez-stats-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-bottom: 20px; }
+.salez-grid-2col { display: grid; grid-template-columns: 1fr 1.4fr; gap: 24px; align-items: start; }
+.salez-settings-layout { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px,1fr)); gap: 20px; align-items: start; }
+.salez-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: var(--card-radius); }
+.salez-form-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
+.salez-form-row > * { flex: 1 1 160px; min-width: 0; }
+.salez-feature-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px,1fr)); gap: 16px; }
+.salez-save-bar { position: fixed; bottom: 0; left: var(--sidebar-width); right: 0; }
+
+/* ── Floating dock nav — always visible ──────────────────────────────────── */
+/* Positioning is handled via inline style on the component (fixed, bottom: 24, centered) */
+.salez-bottom-nav { display: flex; }
+
+/* ── Responsive utility classes (used alongside inline-styled components) ─── */
+
+/* Two-column layout with a fixed-width left panel (e.g. ROI inputs + results) */
+.salez-split-panel {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+/* Two-column layout with a fixed-width right panel (e.g. form + contact info) */
+.salez-split-panel-r {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 24px;
+  align-items: start;
+}
+
+/* Kanban board — horizontal scroll on narrow screens */
+.salez-kanban-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 8px;
+}
+.salez-kanban-board {
+  display: flex;
+  gap: 16px;
+  min-width: max-content;
+}
+
+/* Scrollable table container */
+.salez-table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── Tablet breakpoint (769 – 1100px) ─────────────────────────────────────── */
+/* At this size the 260px sidebar takes >33% of screen — collapse to icon mode  */
+@media (min-width: 769px) and (max-width: 1100px) {
+  :root { --sidebar-width: 60px; }
+
+  .salez-sidebar {
+    width: 60px !important;
+    overflow-x: hidden;
+  }
+  /* Hide text labels, keep icons centered */
+  .salez-sidebar .salez-group-label,
+  .salez-sidebar .salez-logo-text,
+  .salez-sidebar span:not([style*='font-size']):not(.salez-badge) {
+    display: none;
+  }
+
+  .salez-content {
+    margin-left: 60px !important;
+    width: calc(100% - 60px) !important;
+    padding: 20px !important;
+  }
+
+  .salez-split-panel,
+  .salez-split-panel-r {
+    grid-template-columns: 1fr;
+  }
+
+  .salez-stats-4 { grid-template-columns: repeat(2, 1fr); }
+  .salez-save-bar { left: 60px; }
+}
+
+@media (max-width: 768px) {
+  /* Sidebar slides off-canvas on mobile */
+  .salez-sidebar             { transform: translateX(-100%); }
+  .salez-sidebar.mobile-open { transform: translateX(0); z-index: 100; }
+  .salez-hamburger           { display: flex; }
+  .salez-mobile-overlay.mobile-open { display: block; }
+
+  /* Navbar: hide link labels, keep icons; prevent overflow */
+  nav.salez-top-nav { flex-wrap: nowrap !important; overflow: hidden; }
+  nav.salez-top-nav .salez-nav-link-label { display: none !important; }
+  nav.salez-top-nav .salez-nav-nudge { right: 4px !important; }
+
+  /* Content: no left offset, padding-bottom for bottom nav */
+  .salez-content {
+    margin-left: 0 !important;
+    width: 100% !important;
+    padding: 60px 16px 96px !important; /* 96px = floating dock (46px) + 24px gap + buffer */
+    overflow-x: hidden;
+  }
+  /* Allow explicit scroll wrappers inside to work */
+  .salez-kanban-wrap,
+  .salez-table-scroll,
+  .salez-table-wrap {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Stat grids collapse sensibly */
+  .salez-stats-4   { grid-template-columns: repeat(2, 1fr); }
+  .salez-stats-3   { grid-template-columns: 1fr; }
+  .salez-grid-2col { grid-template-columns: 1fr; }
+  .salez-save-bar  { left: 0; }
+
+  /* C8: Bottom tab bar — replaces floating circles on mobile */
+  .salez-bottom-nav {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: auto !important;
+    width: 100vw !important;
+    flex-direction: row !important;
+    justify-content: space-around !important;
+    align-items: stretch !important;
+    padding: 4px 0 calc(4px + env(safe-area-inset-bottom, 0px)) !important;
+    background: var(--sidebar-bg, #0a2463) !important;
+    border-top: 1px solid rgba(255,255,255,0.1) !important;
+    border-radius: 0 !important;
+    gap: 0 !important;
+    box-shadow: 0 -4px 24px rgba(0,0,0,0.3) !important;
+    z-index: 150 !important;
+  }
+  .salez-bottom-nav > div { flex: 1; display: flex; justify-content: center; }
+  .salez-bottom-nav button {
+    width: 100% !important; height: auto !important; border-radius: 10px !important;
+    box-shadow: none !important; padding: 6px 4px !important;
+    flex-direction: column !important; gap: 3px !important;
+    display: flex !important; align-items: center !important; justify-content: center !important;
+    font-size: 22px !important;
+  }
+  .salez-bottom-nav-label { display: block !important; }
+
+  /* C8: Floating action buttons — above the bottom nav */
+  .salez-fab-help  { bottom: 76px !important; right: 16px !important; width: 44px !important; height: 44px !important; font-size: 20px !important; }
+  .salez-fab-quick { bottom: 76px !important; right: 72px !important; width: 44px !important; height: 44px !important; font-size: 20px !important; }
+
+  /* Content: extra bottom padding for tab bar */
+  .salez-content { padding-bottom: 88px !important; }
+
+  /* C8: Page headers — stack on mobile */
+  .salez-page-header { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; }
+  .salez-page-header-actions { flex-wrap: wrap; gap: 8px !important; }
+
+  /* C8: All tables scroll horizontally */
+  .salez-table-wrap { border-radius: 0; }
+  table { min-width: max-content; }
+
+  /* C7+C8: Full-width modals on mobile */
+  .salez-modal { width: calc(100vw - 24px) !important; max-width: calc(100vw - 24px) !important; margin: 0 !important; }
+
+  /* Two-column layouts stack vertically on mobile */
+  .salez-split-panel,
+  .salez-split-panel-r { grid-template-columns: 1fr; }
+
+  /* Kanban board scrolls horizontally; individual columns have min-width */
+  .salez-kanban-wrap { padding-bottom: 16px; }
+
+  /* Typography scale-down */
+  h1 { font-size: 22px !important; }
+  h2 { font-size: 18px !important; }
+
+  /* Card grid: always at least 2 columns on phone, 1 if minmax forces it */
+  .salez-feature-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+
+  /* Form rows stack */
+  .salez-form-row { flex-direction: column; }
+  .salez-form-row > * { flex: none; width: 100%; }
+
+  /* C8: Touch targets — ensure min 44px height for all interactive elements */
+  button, [role="button"], a, input, select, textarea {
+    min-height: 44px;
+  }
+  /* Inline link exception (don't stretch inline anchors) */
+  p a, li a { min-height: auto; display: inline; }
+}
+
+/* ── Sidebar scrollbar — slim and dark ──────────────────────────────────────── */
+.salez-sidebar { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent; }
+.salez-sidebar::-webkit-scrollbar { width: 4px; }
+.salez-sidebar::-webkit-scrollbar-track { background: transparent; }
+.salez-sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 999px; }
+.salez-sidebar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.28); }
+
+/* Sidebar must sit above BottomNav (z-index 150) on mobile when open */
+.salez-sidebar.mobile-open { z-index: 210 !important; }
+
+/* ── Dark Mode ───────────────────────────────────────────────────────────────
+   Uses invert(0.88) + hue-rotate(180deg) on content area only.
+   This technique:
+   - Turns white backgrounds dark (~#1e1e1e)
+   - Preserves hue-based brand colors (blue stays blue, green stays green)
+   - Leaves the sidebar untouched (already dark navy)
+   ─────────────────────────────────────────────────────────────────────────── */
+body.dark-mode .salez-content {
+  filter: invert(0.88) hue-rotate(180deg);
+}
+
+/* Re-invert images/videos so they look natural */
+body.dark-mode .salez-content img,
+body.dark-mode .salez-content video,
+body.dark-mode .salez-content canvas {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+/* Modals and overlays that are portaled to body root (outside .salez-content) */
+body.dark-mode .salez-dark-modal {
+  filter: invert(0.88) hue-rotate(180deg);
+}
+
+/* Smooth transition when toggling */
+body.dark-mode .salez-content,
+body .salez-content {
+  transition: filter 0.25s ease;
+}
+
+/* ── Print styles ────────────────────────────────────────────────────────────── */
+@media print {
+  /* Hide everything that's not content */
+  .salez-sidebar,
+  .salez-hamburger,
+  .salez-mobile-overlay,
+  .salez-fab-help,
+  .salez-fab-quick,
+  .salez-no-print,
+  button.salez-no-print { display: none !important; }
+
+  /* Content fills full page width */
+  .salez-content {
+    margin-left: 0 !important;
+    width: 100% !important;
+    padding: 20px !important;
+    background: #fff !important;
+  }
+
+  /* Remove card shadows and borders for cleaner output */
+  .sz-card, .sz-stat {
+    box-shadow: none !important;
+    border: 1px solid #d1d5db !important;
+  }
+
+  /* Force white background everywhere */
+  body, html { background: #fff !important; }
+
+  /* Tables: don't break rows across pages */
+  tr { page-break-inside: avoid; }
+
+  /* Page break helpers */
+  .salez-print-break { page-break-before: always; }
+  .salez-print-avoid-break { page-break-inside: avoid; }
+
+  /* Print header */
+  .salez-print-header {
+    display: block !important;
+    font-size: 11px;
+    color: #64748b;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  /* Kanban board: wrap columns, scale to fit A4 */
+  .salez-kanban-board {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 12px !important;
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+  .salez-kanban-col {
+    min-width: 0 !important;
+    width: auto !important;
+    page-break-inside: avoid;
+    break-inside: avoid;
+    box-shadow: none !important;
+    border: 1px solid #e2e8f0 !important;
+  }
+
+  /* Scale the entire content to fit A4 */
+  @page { size: A4 landscape; margin: 12mm; }
+}
+
+/* Print header is hidden on screen */
+.salez-print-header { display: none; }
+
+@media (max-width: 480px) {
+  .salez-stats-4      { grid-template-columns: 1fr; }
+  .salez-feature-grid { grid-template-columns: 1fr !important; }
+  .salez-fab-help     { display: none; }
+  .salez-fab-quick    { right: 16px !important; }
+  body { font-size: 13px; }
+
+  /* Live Call Coach: stack panels vertically on small phones */
+  .salez-lcc-layout   { flex-direction: column !important; }
+  .salez-lcc-panel    { width: 100% !important; min-width: unset !important; }
+
+  /* Modals: almost full screen on very small */
+  .salez-modal { border-radius: 12px 12px 0 0 !important; position: fixed !important; bottom: 0 !important; top: auto !important; max-height: 90vh !important; overflow-y: auto !important; }
+
+  /* Cards in grids go single column */
+  [style*="grid-template-columns: repeat(auto-fit"] { grid-template-columns: 1fr !important; }
+  [style*="grid-template-columns: repeat(auto-fill"] { grid-template-columns: 1fr !important; }
+
+  /* Pipeline kanban: compact columns */
+  .salez-kanban-col { min-width: 280px !important; }
+}

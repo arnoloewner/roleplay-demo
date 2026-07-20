@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/config.ts","./src/main.tsx","./src/components/textroleplay.tsx","./src/services/apifetch.ts","./src/services/usedeepgramstt.ts","./src/services/useopenaiwhisper.ts"],"version":"5.9.3"}
