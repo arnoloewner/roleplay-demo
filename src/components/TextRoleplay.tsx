@@ -588,7 +588,7 @@ export default function TextRoleplay() {
                 fontWeight: 700,
               }}
             >
-              🎬 Roleplay Starten
+              ▶ Roleplay Starten
             </button>
           </div>
         </div>
