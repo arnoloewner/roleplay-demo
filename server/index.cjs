@@ -230,7 +230,7 @@ Antworte AUSSCHLIESSLICH mit gültigem JSON (kein Markdown):
 });
 
 // ── Fallback to index.html for SPA ──────────────────────────────────────────
-app.get('*', (req, res) => {
+app.use((req, res) => {
   const indexPath = path.join(distPath, 'index.html');
   if (fs.existsSync(indexPath)) {
     res.sendFile(indexPath);
