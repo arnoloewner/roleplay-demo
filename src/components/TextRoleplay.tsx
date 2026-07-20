@@ -160,11 +160,41 @@ export default function TextRoleplay() {
   const sessionEndedRef = useRef(sessionEnded);
   const customerLastSaidRef = useRef<number>(0);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const hasInitializedRef = useRef(false);
 
   useEffect(() => { conversationRef.current = conversation; }, [conversation]);
   useEffect(() => { isProcessingRef.current = isProcessing; }, [isProcessing]);
   useEffect(() => { sessionEndedRef.current = sessionEnded; }, [sessionEnded]);
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [conversation, isProcessing]);
+
+  // Auto-generate opening greeting from partner
+  useEffect(() => {
+    if (sessionStarted && !hasInitializedRef.current && conversation.length === 1) {
+      hasInitializedRef.current = true;
+      const greetings: Record<string, string[]> = {
+        default: [
+          `Guten Tag, hier ist ${activeCustomPersona?.name || 'Ihr Ansprechpartner'}. Wie kann ich Ihnen helfen?`,
+          `Hallo, ${activeCustomPersona?.name || 'Ihr Ansprechpartner'} hier. Was kann ich für Sie tun?`,
+          `Grüße, ich bin ${activeCustomPersona?.name || 'Ihr Ansprechpartner'} von ${activeCustomPersona?.company || 'unserer Firma'}. Wie geht es Ihnen?`,
+        ],
+        vorzimmer: [
+          `Guten Tag, hier ist das Sekretariat von ${activeCustomPersona?.company || 'unserem Unternehmen'}. Mit wem habe ich die Freude?`,
+          `Hallo, Sie sprechen mit dem Büro von ${activeCustomPersona?.company || 'uns'}. Womit kann ich Ihnen dienen?`,
+          `Guten Tag, Sekretariat ${activeCustomPersona?.company || 'hier'}. Wie kann ich Ihnen weiterhelfen?`,
+        ],
+      };
+
+      const isVorzimmer = activeCustomPersona?.role?.includes('Sekretär') || activeCustomPersona?.role?.includes('Assistent');
+      const greetingList = isVorzimmer ? greetings.vorzimmer : greetings.default;
+      const greeting = greetingList[Math.floor(Math.random() * greetingList.length)];
+
+      setConversation((prev) => [
+        ...prev,
+        { id: Date.now(), speaker: 'customer', text: greeting },
+      ]);
+    }
+  }, [sessionStarted, activeCustomPersona]);
+
 
   const toTurns = (conv: ConversationItem[]): RoleplayTurn[] => {
     return conv
