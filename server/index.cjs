@@ -50,24 +50,43 @@ async function streamClaudeResponse(res, params, parseResult) {
 
 // ── Chat endpoint (Roleplay) ────────────────────────────────────────────────
 app.post('/api/chat/stream', async (req, res) => {
-  const { messages, scenario, persona } = req.body;
+  const { messages, scenario, persona, difficulty } = req.body;
 
   if (!messages || !Array.isArray(messages)) {
     return res.status(400).json({ error: 'Messages required' });
   }
 
-  const systemPrompt = `You are a sales role-play trainer. Your role is to help sales professionals practice their pitch and sales conversations.
+  const difficultyLevel = difficulty !== undefined ? difficulty : 1;
 
-${scenario ? `Scenario: ${scenario}` : ''}
-${persona ? `Your persona: ${persona}` : ''}
+  let difficultyInstructions = '';
+  if (difficultyLevel === 0) {
+    difficultyInstructions = `You are an interested prospect. You listen openly and ask clarifying questions. You show genuine interest. Objections are minor and easily addressable.`;
+  } else if (difficultyLevel === 1) {
+    difficultyInstructions = `You are a skeptical but fair prospect. You ask tough questions. You have some objections like "We already have a solution" or "That doesn't fit our process" but you're open to good arguments.`;
+  } else {
+    difficultyInstructions = `You are a very difficult prospect. You are critical, skeptical, and resistant. Common objections: "We have no interest", "This is not a priority", "We don't have budget", "Our current solution works fine". Push back hard on claims. Only convince you with VERY compelling arguments.`;
+  }
 
-Respond naturally as if you are a prospect. Ask clarifying questions, raise objections, and simulate a real sales conversation. Be challenging but fair.`;
+  const systemPrompt = `You are a realistic sales prospect in a cold call scenario. Your goal is to roleplay authentically.
+
+${difficultyInstructions}
+
+Key behaviors:
+- If the rep just called, ask questions like "Worum geht es bitte?" or "Was ist das Anliegen?"
+- Keep responses short and natural (2-3 sentences max like a real call)
+- Ask clarifying questions about the offer
+- Raise realistic objections for your difficulty level
+- Only continue conversation if genuinely interested or if rep makes compelling argument
+- Be authentic - people on the phone don't give long speeches
+
+${scenario ? `Background: ${scenario}` : ''}
+${persona ? `Your role: ${persona}` : ''}`;
 
   await streamClaudeResponse(
     res,
     {
       model: 'claude-opus-4-1',
-      max_tokens: 1024,
+      max_tokens: 300,
       system: systemPrompt,
       messages: messages.map(m => ({
         role: m.role,

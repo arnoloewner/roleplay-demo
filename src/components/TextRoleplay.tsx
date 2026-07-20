@@ -153,6 +153,7 @@ export default function TextRoleplay() {
   const [personaCompany, setPersonaCompany] = useState('');
   const [personaRole, setPersonaRole] = useState('');
   const [personaDescription, setPersonaDescription] = useState('');
+  const [difficultyLevel, setDifficultyLevel] = useState<0 | 1 | 2>(1);
 
   const [activeCustomPersona, setActiveCustomPersona] = useState<CustomPersona | null>(null);
   const conversationRef = useRef(conversation);
@@ -218,6 +219,7 @@ export default function TextRoleplay() {
         })),
         scenario: customPersona?.description || 'Sales roleplay',
         persona: customPersona?.role || 'prospect',
+        difficulty: difficultyLevel,
       }),
     });
 
@@ -586,6 +588,30 @@ export default function TextRoleplay() {
                   />
                 </div>
               )}
+            </div>
+          </div>
+
+          {/* Difficulty Slider */}
+          <div style={{ flexShrink: 0, marginBottom: 8 }}>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 6 }}>
+              Schwierigkeitsgrad
+            </label>
+            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+              <span style={{ fontSize: 10, color: '#64748b', minWidth: 40 }}>Leicht</span>
+              <input
+                type="range"
+                min="0"
+                max="2"
+                value={difficultyLevel}
+                onChange={(e) => setDifficultyLevel(parseInt(e.target.value) as 0 | 1 | 2)}
+                style={{ flex: 1 }}
+              />
+              <span style={{ fontSize: 10, color: '#64748b', minWidth: 40, textAlign: 'right' }}>Schwer</span>
+            </div>
+            <div style={{ fontSize: 10, color: '#64748b', marginTop: 4, textAlign: 'center' }}>
+              {difficultyLevel === 0 && 'Leicht - Offene Prospect'}
+              {difficultyLevel === 1 && 'Normal - Skeptischer Prospect'}
+              {difficultyLevel === 2 && 'Schwer - Sehr kritischer Prospect'}
             </div>
           </div>
 
