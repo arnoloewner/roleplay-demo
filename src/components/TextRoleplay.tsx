@@ -336,17 +336,33 @@ export default function TextRoleplay() {
     setError('');
 
     try {
+      console.log('[Review] Sending request with turns:', turns.length);
       const res = await apiFetch('/api/review', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ conversation: turns }),
       });
 
-      if (!res.ok) throw new Error('Review failed');
+      console.log('[Review] Response status:', res.status);
+
+      if (!res.ok) {
+        const errText = await res.text();
+        console.error('[Review] Error response:', errText);
+        throw new Error(`HTTP ${res.status}: ${errText}`);
+      }
+
       const data = await res.json();
+      console.log('[Review] Got review data:', data);
+
+      if (!data.score) {
+        throw new Error('Invalid review format');
+      }
+
       setReview(data);
     } catch (err) {
-      setError('Feedback konnte nicht generiert werden.');
+      const msg = err instanceof Error ? err.message : 'Unbekannter Fehler';
+      console.error('[Review] Error:', msg);
+      setError(`Feedback-Fehler: ${msg}`);
     } finally {
       setIsReviewing(false);
     }

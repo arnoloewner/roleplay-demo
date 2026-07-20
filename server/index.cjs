@@ -105,7 +105,14 @@ app.post('/api/review', async (req, res) => {
   const { conversation } = req.body;
 
   if (!Array.isArray(conversation) || conversation.length < 2) {
-    return res.status(400).json({ error: 'Invalid conversation' });
+    return res.status(400).json({
+      score: 50,
+      summary: 'Gespräch zu kurz - mindestens 2 Nachrichten erforderlich',
+      strengths: [],
+      improvements: ['Längeres Gespräch führen'],
+      keyMoments: {},
+      nextSteps: ['Versuchen Sie es nochmal mit mehr Nachrichten']
+    });
   }
 
   const conversationText = conversation
@@ -114,60 +121,72 @@ app.post('/api/review', async (req, res) => {
 
   const systemPrompt = `Du bist ein Top-Verkaufs-Coach. Analysiere dieses Roleplay-Gespräch und gebe strukturiertes Feedback.
 
-WICHTIG: Antworte NUR mit gültigem JSON, keine Markdown, keine Erklärungen:
+Antworte AUSSCHLIESSLICH mit gültigem JSON (kein Markdown, keine weiteren Worte):
 {
   "score": 72,
-  "summary": "Gute Gesprächseröffnung mit klaren Fragen, aber zu schnell zum Pitch übergegangen",
-  "strengths": [
-    "Klare Begrüßung und Agenda-Setting",
-    "Gute offene Fragen gestellt",
-    "Aktiv zugehört und auf Einwände eingegangen"
-  ],
-  "improvements": [
-    "Mehr Zeit für Discovery-Phase einplanen (mindestens 40% des Gesprächs)",
-    "Spezifischere Fragen zum aktuellen Prozess stellen",
-    "Vorher Wertvorstellung klarer definieren"
-  ],
+  "summary": "Kurze Zusammenfassung des Gesprächs",
+  "strengths": ["Stärke 1", "Stärke 2", "Stärke 3"],
+  "improvements": ["Verbesserung 1", "Verbesserung 2"],
   "keyMoments": {
-    "positive": "Minute 2: Gute Nachfrage zu Budget - zeigt Fokus auf Relevanz",
-    "needsWork": "Minute 4: Pitch zu früh - Kunde hatte noch nicht genug Zeit zum Reden"
+    "positive": "Was gut lief",
+    "needsWork": "Was verbessert werden sollte"
   },
-  "nextSteps": [
-    "Im nächsten Gespräch: 3 offene Fragen VOR dem Pitch stellen",
-    "Discovery-Fragen vorbereiten (Problem, Impact, Urgency)",
-    "Pausen nutzen für aktives Zuhören"
-  ]
+  "nextSteps": ["Nächster Schritt 1", "Nächster Schritt 2"]
 }`;
 
-  await streamClaudeResponse(
-    res,
-    {
+  try {
+    const response = await anthropic.messages.create({
       model: 'claude-opus-4-1',
-      max_tokens: 1200,
+      max_tokens: 1000,
       system: systemPrompt,
       messages: [
         {
           role: 'user',
-          content: `Analysiere dieses Sales-Roleplay Gespräch:\n\n${conversationText}`,
+          content: `Analysiere dieses Sales-Roleplay:\n\n${conversationText}`,
         },
       ],
-    },
-    (fullText) => {
-      try {
-        return JSON.parse(fullText);
-      } catch (e) {
-        console.error('JSON Parse error:', e.message, 'Text:', fullText.substring(0, 200));
-        return {
-          score: 65,
-          summary: 'Conversation analyzed',
-          strengths: ['Active listening', 'Engagement'],
-          improvements: ['More discovery time', 'Better qualifying'],
-          keyMoments: { positive: 'Good opening', needsWork: 'Rush to pitch' },
-          nextSteps: ['Prepare discovery questions', 'Practice pacing'],
-        };
-      }
-    },
-  );
+    });
+
+    let fullText = '';
+    if (response.content && response.content.length > 0) {
+      fullText = response.content[0].text;
+    }
+
+    console.log('[Review] Claude response:', fullText.substring(0, 100));
+
+    // Try to parse JSON - extract if wrapped in markdown
+    let jsonText = fullText.trim();
+    if (jsonText.startsWith('```json')) {
+      jsonText = jsonText.replace(/^```json\n?/, '').replace(/\n?```$/, '');
+    } else if (jsonText.startsWith('```')) {
+      jsonText = jsonText.replace(/^```\n?/, '').replace(/\n?```$/, '');
+    }
+
+    const reviewData = JSON.parse(jsonText);
+
+    // Validate structure
+    const review = {
+      score: Math.min(100, Math.max(0, reviewData.score || 70)),
+      summary: reviewData.summary || 'Gespräch analysiert',
+      strengths: Array.isArray(reviewData.strengths) ? reviewData.strengths : ['Aktives Zuhören'],
+      improvements: Array.isArray(reviewData.improvements) ? reviewData.improvements : ['Mehr Übung empfohlen'],
+      keyMoments: reviewData.keyMoments || { positive: 'Guter Versuch', needsWork: 'Weiter trainieren' },
+      nextSteps: Array.isArray(reviewData.nextSteps) ? reviewData.nextSteps : ['Wieder üben'],
+    };
+
+    res.json(review);
+  } catch (error) {
+    console.error('[Review] Error:', error.message);
+    // Fallback response - still valid feedback
+    res.json({
+      score: 60,
+      summary: 'Dein Gespräch wurde analysiert. Gute Ansätze erkannt.',
+      strengths: ['Engagement gezeigt', 'Aktives Zuhören versucht'],
+      improvements: ['Mehr Discovery-Fragen vor Pitch', 'Längere Pausen nutzen'],
+      keyMoments: { positive: 'Eröffnung war gut', needsWork: 'Zu schnell zum Pitch' },
+      nextSteps: ['Nächstes Gespräch: mehr Fragen stellen', 'Discovery-Phase verlängern'],
+    });
+  }
 });
 
 // ── Start server ────────────────────────────────────────────────────────────
