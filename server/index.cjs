@@ -138,13 +138,14 @@ app.post('/api/review', async (req, res) => {
     .map(turn => `${turn.speaker === 'rep' ? 'Vertrieb' : 'Kunde'}: ${turn.text}`)
     .join('\n');
 
-  const systemPrompt = `Du bist ein Sales-Coach für Kaltakquisition. Analysiere dieses Verkaufsgespräch und gebe Feedback.
+  const systemPrompt = `Du bist ein Sales-Coach für Kaltakquisition. Analysiere dieses Verkaufsgespräch und gebe Feedback + ein Mustergespräch.
 
 WICHTIG:
 - Bewerte NUR Verkaufs-Technique, nicht Rechtschreibung oder Grammatik
 - Ignoriere Tippfehler, Satzzeichen, Grammatik komplett
 - Fokus: Discovery-Fragen, Einwandbehandlung, Gesprächsfluss, Timing
 - Bewerte nach Sales-Qualität: 50-60 = schwach, 70-80 = gut, 90+ = sehr gut
+- Schreibe ein IDEAL Gespräch (4-6 Umläufe) basierend auf den gleichen Personen
 
 Antworte AUSSCHLIESSLICH mit gültigem JSON (kein Markdown):
 {
@@ -156,7 +157,8 @@ Antworte AUSSCHLIESSLICH mit gültigem JSON (kein Markdown):
     "positive": "Gute Verkaufs-Moment",
     "needsWork": "Zu verbessernde Verkaufs-Technik"
   },
-  "nextSteps": ["Trainings-Schritt 1", "Trainings-Schritt 2"]
+  "nextSteps": ["Trainings-Schritt 1", "Trainings-Schritt 2"],
+  "idealConversationTranscript": "Rep: Guten Tag, hier ist [Name]...\\nKunde: Ja?\\nRep: Kurz..."
 }`;
 
   try {
@@ -197,6 +199,7 @@ Antworte AUSSCHLIESSLICH mit gültigem JSON (kein Markdown):
       improvements: Array.isArray(reviewData.improvements) ? reviewData.improvements : ['Mehr Übung empfohlen'],
       keyMoments: reviewData.keyMoments || { positive: 'Guter Versuch', needsWork: 'Weiter trainieren' },
       nextSteps: Array.isArray(reviewData.nextSteps) ? reviewData.nextSteps : ['Wieder üben'],
+      idealConversationTranscript: reviewData.idealConversationTranscript || 'Mustergespräch nicht verfügbar',
     };
 
     res.json(review);
@@ -210,6 +213,7 @@ Antworte AUSSCHLIESSLICH mit gültigem JSON (kein Markdown):
       improvements: ['Mehr Discovery-Fragen vor Pitch', 'Längere Pausen nutzen'],
       keyMoments: { positive: 'Eröffnung war gut', needsWork: 'Zu schnell zum Pitch' },
       nextSteps: ['Nächstes Gespräch: mehr Fragen stellen', 'Discovery-Phase verlängern'],
+      idealConversationTranscript: 'Rep: Guten Tag, hier ist [Name]. Worum geht es?\nKunde: Ja, guten Tag.\nRep: Kurz - wir helfen Unternehmen wie Ihres mit [Lösung]. Darf ich kurz fragen: wie läuft das aktuell bei Ihnen?\nKunde: Naja, wir haben einige Herausforderungen.\nRep: Genau - und wenn wir das für Sie optimieren könnten, wäre das wertvoll?\nKunde: Ja, könnte interessant sein.',
     });
   }
 });

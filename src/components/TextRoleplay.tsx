@@ -28,6 +28,7 @@ type RoleplayReview = {
     needsWork?: string;
   };
   nextSteps?: string[];
+  idealConversationTranscript?: string;
 };
 
 type RoleplayTurn = { speaker: 'rep' | 'customer'; text: string };
@@ -706,9 +707,30 @@ export default function TextRoleplay() {
         </div>
       </div>
 
+      {/* Loading Animation */}
+      {sessionEnded && isReviewing && (
+        <div style={{ padding: '16px', borderTop: '1px solid #e2e8f0', background: '#f0f9ff', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 100 }}>
+          <style>{`
+            @keyframes dots {
+              0%, 20% { content: '.'; }
+              40% { content: '..'; }
+              60%, 100% { content: '...'; }
+            }
+            @keyframes pulse {
+              0%, 100% { opacity: 1; }
+              50% { opacity: 0.5; }
+            }
+            .loading-dots { animation: pulse 1.5s infinite; }
+          `}</style>
+          <div style={{ fontSize: 32, marginBottom: 8 }}>⏳</div>
+          <div style={{ fontSize: 12, fontWeight: 600, color: '#1e40af', marginBottom: 4 }}>Feedback wird geladen...</div>
+          <div style={{ fontSize: 11, color: '#64748b' }}>Claude analysiert dein Gespräch</div>
+        </div>
+      )}
+
       {/* Review Section */}
       {sessionEnded && review && (
-        <div style={{ padding: '10px 16px', borderTop: '1px solid #e2e8f0', maxHeight: '45%', overflow: 'auto', background: '#f0f9ff' }}>
+        <div style={{ padding: '10px 16px', borderTop: '1px solid #e2e8f0', maxHeight: '50%', overflow: 'auto', background: '#f0f9ff' }}>
           <div style={{ fontSize: 11 }}>
             {/* Score & Summary */}
             <div style={{ marginBottom: 10, paddingBottom: 10, borderBottom: '1px solid #bfdbfe' }}>
@@ -776,7 +798,7 @@ export default function TextRoleplay() {
 
             {/* Next Steps */}
             {review.nextSteps && review.nextSteps.length > 0 && (
-              <div>
+              <div style={{ marginBottom: 10 }}>
                 <div style={{ fontWeight: 700, color: '#2563eb', marginBottom: 4, fontSize: 10 }}>
                   📋 NÄCHSTE SCHRITTE
                 </div>
@@ -787,6 +809,18 @@ export default function TextRoleplay() {
                     </li>
                   ))}
                 </ol>
+              </div>
+            )}
+
+            {/* Ideal Conversation */}
+            {review.idealConversationTranscript && (
+              <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid #bfdbfe' }}>
+                <div style={{ fontWeight: 700, color: '#7c3aed', marginBottom: 6, fontSize: 10 }}>
+                  🎬 MUSTERGESPRÄCH
+                </div>
+                <div style={{ fontSize: 9.5, color: '#5b21b6', lineHeight: 1.6, whiteSpace: 'pre-wrap', fontFamily: 'monospace' }}>
+                  {review.idealConversationTranscript}
+                </div>
               </div>
             )}
           </div>
