@@ -19,15 +19,15 @@ type CustomPersona = {
 };
 
 type RoleplayReview = {
+  score: number;
   summary: string;
   strengths: string[];
-  mistakes: string[];
   improvements: string[];
-  failedMoments: string[];
-  betterResponses: string[];
-  idealConversationTranscript: string;
-  score: number;
-  topPriority?: string;
+  keyMoments?: {
+    positive?: string;
+    needsWork?: string;
+  };
+  nextSteps?: string[];
 };
 
 type RoleplayTurn = { speaker: 'rep' | 'customer'; text: string };
@@ -85,6 +85,15 @@ type IndustryKey = typeof INDUSTRIES[number]['key'];
 type SizeKey = typeof SIZE_TIERS[number]['key'];
 type VorzimmerKey = typeof VORZIMMER_PERSONAS[number]['key'];
 
+const PARTNER_NAMES = {
+  saas: ['Thomas Müller', 'Sarah Fischer', 'Alexander Schmidt', 'Julia Weber', 'Christian Bauer'],
+  ecommerce: ['Marco Rossi', 'Anna König', 'David Richter', 'Lisa Hoffmann', 'Peter Neumann'],
+  manufacturing: ['Klaus Bergmann', 'Margit Wagner', 'Helmut Schmidt', 'Petra Krämer', 'Wolfgang Schulz'],
+  finance: ['Hans Dietrich', 'Gabriele Meier', 'Stefan Zimmermann', 'Petra Schmitz', 'Robert Franzen'],
+  healthcare: ['Dr. Martin Müller', 'Dr. Sabine Köhler', 'Dr. Johannes Steiner', 'Dr. Claudia Werner', 'Dr. Paul Bergmann'],
+  consulting: ['Michael Richter', 'Katharina Bauer', 'Sebastian Krause', 'Angela Hoffmann', 'Dirk Werner'],
+};
+
 function buildCompanyPersona(industry: IndustryKey, size: SizeKey) {
   const roles: Record<IndustryKey, Record<SizeKey, string>> = {
     saas: { '1-10': 'CEO & Co-Founder', '11-50': 'CEO', '51-200': 'VP Sales', '201-1000': 'CRO', '1000+': 'SVP Revenue' },
@@ -112,7 +121,12 @@ function buildCompanyPersona(industry: IndustryKey, size: SizeKey) {
     '1000+': 'Sehr langsame Entscheidungsprozesse. Viele Stakeholder müssen zustimmen.',
   };
 
+  // Pick a random name for this persona
+  const names = PARTNER_NAMES[industry];
+  const partnerName = names[Math.floor(Math.random() * names.length)];
+
   return {
+    name: partnerName,
     role: roles[industry][size],
     description: `${descriptions[industry]} ${sizeDescriptions[size]}`,
   };
@@ -254,12 +268,12 @@ export default function TextRoleplay() {
       const ind = INDUSTRIES.find((i) => i.key === selectedIndustry)!;
       const sz = SIZE_TIERS.find((s) => s.key === selectedSize)!;
       setActiveCustomPersona({
-        name: 'Gesprächspartner',
+        name: preset.name,
         company: `${ind.label}-Unternehmen (${sz.label})`,
         role: preset.role,
         industry: ind.label,
         description: preset.description,
-        contextText: `Du bist ein ${preset.role} in einem ${ind.label}-Unternehmen mit ${sz.label} Mitarbeitern.`,
+        contextText: `Du bist ${preset.name}, ${preset.role} in einem ${ind.label}-Unternehmen mit ${sz.label} Mitarbeitern.`,
       });
       setSessionStarted(true);
       return;
@@ -617,29 +631,85 @@ export default function TextRoleplay() {
 
       {/* Review Section */}
       {sessionEnded && review && (
-        <div style={{ padding: '8px 16px', borderTop: '1px solid #e2e8f0', maxHeight: '35%', overflow: 'auto' }}>
-          <div style={{ background: '#f0f9ff', border: '1px solid #bfdbfe', borderRadius: 8, padding: 10 }}>
-            <h2 style={{ fontSize: 12, fontWeight: 700, margin: '0 0 6px 0', color: '#1e40af' }}>
-              📊 Feedback • Score: {review.score}/100
-            </h2>
-            {review.strengths.length > 0 && (
-              <div style={{ marginBottom: 8, fontSize: 10 }}>
-                <div style={{ fontWeight: 700, color: '#1e40af', marginBottom: 2 }}>✅ Stärken:</div>
-                <ul style={{ margin: 0, paddingLeft: 16 }}>
-                  {review.strengths.slice(0, 2).map((s, i) => (
-                    <li key={i} style={{ color: '#1e40af', marginBottom: 1 }}>{s}</li>
+        <div style={{ padding: '10px 16px', borderTop: '1px solid #e2e8f0', maxHeight: '45%', overflow: 'auto', background: '#f0f9ff' }}>
+          <div style={{ fontSize: 11 }}>
+            {/* Score & Summary */}
+            <div style={{ marginBottom: 10, paddingBottom: 10, borderBottom: '1px solid #bfdbfe' }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 6 }}>
+                <div style={{ fontSize: 18, fontWeight: 700, color: '#1e40af' }}>
+                  {review.score}
+                </div>
+                <div style={{ fontSize: 10, color: '#64748b' }}>/100</div>
+              </div>
+              <div style={{ fontSize: 10, color: '#1e40af', lineHeight: 1.4 }}>
+                {review.summary}
+              </div>
+            </div>
+
+            {/* Strengths */}
+            {review.strengths && review.strengths.length > 0 && (
+              <div style={{ marginBottom: 10 }}>
+                <div style={{ fontWeight: 700, color: '#059669', marginBottom: 4, fontSize: 10 }}>
+                  ✅ STÄRKEN
+                </div>
+                <ul style={{ margin: 0, paddingLeft: 14, fontSize: 9.5 }}>
+                  {review.strengths.map((s, i) => (
+                    <li key={i} style={{ color: '#047857', marginBottom: 2, lineHeight: 1.3 }}>
+                      {s}
+                    </li>
                   ))}
                 </ul>
               </div>
             )}
-            {review.improvements.length > 0 && (
-              <div style={{ fontSize: 10 }}>
-                <div style={{ fontWeight: 700, color: '#1e40af', marginBottom: 2 }}>💡 Verbesserungen:</div>
-                <ul style={{ margin: 0, paddingLeft: 16 }}>
-                  {review.improvements.slice(0, 2).map((imp, i) => (
-                    <li key={i} style={{ color: '#1e40af', marginBottom: 1 }}>{imp}</li>
+
+            {/* Improvements */}
+            {review.improvements && review.improvements.length > 0 && (
+              <div style={{ marginBottom: 10 }}>
+                <div style={{ fontWeight: 700, color: '#d97706', marginBottom: 4, fontSize: 10 }}>
+                  💡 VERBESSERUNGEN
+                </div>
+                <ul style={{ margin: 0, paddingLeft: 14, fontSize: 9.5 }}>
+                  {review.improvements.map((imp, i) => (
+                    <li key={i} style={{ color: '#b45309', marginBottom: 2, lineHeight: 1.3 }}>
+                      {imp}
+                    </li>
                   ))}
                 </ul>
+              </div>
+            )}
+
+            {/* Key Moments */}
+            {review.keyMoments && (
+              <div style={{ marginBottom: 10 }}>
+                <div style={{ fontWeight: 700, color: '#1e40af', marginBottom: 4, fontSize: 10 }}>
+                  🎯 SCHLÜSSELMOMENTE
+                </div>
+                {review.keyMoments.positive && (
+                  <div style={{ fontSize: 9.5, color: '#047857', marginBottom: 3, lineHeight: 1.3 }}>
+                    <strong>Positiv:</strong> {review.keyMoments.positive}
+                  </div>
+                )}
+                {review.keyMoments.needsWork && (
+                  <div style={{ fontSize: 9.5, color: '#b45309', lineHeight: 1.3 }}>
+                    <strong>Zu verbessern:</strong> {review.keyMoments.needsWork}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Next Steps */}
+            {review.nextSteps && review.nextSteps.length > 0 && (
+              <div>
+                <div style={{ fontWeight: 700, color: '#2563eb', marginBottom: 4, fontSize: 10 }}>
+                  📋 NÄCHSTE SCHRITTE
+                </div>
+                <ol style={{ margin: 0, paddingLeft: 16, fontSize: 9.5 }}>
+                  {review.nextSteps.map((step, i) => (
+                    <li key={i} style={{ color: '#1e40af', marginBottom: 2, lineHeight: 1.3 }}>
+                      {step}
+                    </li>
+                  ))}
+                </ol>
               </div>
             )}
           </div>

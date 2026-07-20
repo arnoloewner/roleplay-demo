@@ -8,7 +8,7 @@ const PORT = process.env.PORT || 3002;
 const app = express();
 
 // ── Middleware ──────────────────────────────────────────────────────────────
-app.use(cors({ origin: process.env.VITE_API_BASE || 'http://localhost:5174', credentials: true }));
+app.use(cors({ origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175', 'http://localhost:5176'], credentials: true }));
 app.use(express.json());
 app.use(express.text({ type: 'text/event-stream' }));
 
@@ -109,50 +109,61 @@ app.post('/api/review', async (req, res) => {
   }
 
   const conversationText = conversation
-    .map(turn => `${turn.speaker === 'rep' ? 'Sales Rep' : 'Customer'}: ${turn.text}`)
+    .map(turn => `${turn.speaker === 'rep' ? 'Vertrieb' : 'Kunde'}: ${turn.text}`)
     .join('\n');
 
-  const systemPrompt = `You are an expert sales coach. Analyze this roleplay conversation and provide constructive feedback.
+  const systemPrompt = `Du bist ein Top-Verkaufs-Coach. Analysiere dieses Roleplay-Gespräch und gebe strukturiertes Feedback.
 
-Return JSON with exactly this structure (no markdown, just raw JSON):
+WICHTIG: Antworte NUR mit gültigem JSON, keine Markdown, keine Erklärungen:
 {
-  "summary": "1-2 sentence overview",
-  "strengths": ["strength 1", "strength 2"],
-  "mistakes": ["mistake 1", "mistake 2"],
-  "improvements": ["improvement 1", "improvement 2"],
-  "failedMoments": ["failed moment 1"],
-  "betterResponses": ["better response 1"],
-  "idealConversationTranscript": "Rep: opening\\nCustomer: response",
-  "score": 75,
-  "topPriority": "Most important next step"
+  "score": 72,
+  "summary": "Gute Gesprächseröffnung mit klaren Fragen, aber zu schnell zum Pitch übergegangen",
+  "strengths": [
+    "Klare Begrüßung und Agenda-Setting",
+    "Gute offene Fragen gestellt",
+    "Aktiv zugehört und auf Einwände eingegangen"
+  ],
+  "improvements": [
+    "Mehr Zeit für Discovery-Phase einplanen (mindestens 40% des Gesprächs)",
+    "Spezifischere Fragen zum aktuellen Prozess stellen",
+    "Vorher Wertvorstellung klarer definieren"
+  ],
+  "keyMoments": {
+    "positive": "Minute 2: Gute Nachfrage zu Budget - zeigt Fokus auf Relevanz",
+    "needsWork": "Minute 4: Pitch zu früh - Kunde hatte noch nicht genug Zeit zum Reden"
+  },
+  "nextSteps": [
+    "Im nächsten Gespräch: 3 offene Fragen VOR dem Pitch stellen",
+    "Discovery-Fragen vorbereiten (Problem, Impact, Urgency)",
+    "Pausen nutzen für aktives Zuhören"
+  ]
 }`;
 
   await streamClaudeResponse(
     res,
     {
       model: 'claude-opus-4-1',
-      max_tokens: 1500,
+      max_tokens: 1200,
       system: systemPrompt,
       messages: [
         {
           role: 'user',
-          content: `Analyze this sales roleplay:\n\n${conversationText}`,
+          content: `Analysiere dieses Sales-Roleplay Gespräch:\n\n${conversationText}`,
         },
       ],
     },
     (fullText) => {
       try {
         return JSON.parse(fullText);
-      } catch {
+      } catch (e) {
+        console.error('JSON Parse error:', e.message, 'Text:', fullText.substring(0, 200));
         return {
-          summary: 'Good attempt',
-          strengths: ['Engaged'],
-          mistakes: [],
-          improvements: ['Keep practicing'],
-          failedMoments: [],
-          betterResponses: [],
-          idealConversationTranscript: '',
-          score: 70,
+          score: 65,
+          summary: 'Conversation analyzed',
+          strengths: ['Active listening', 'Engagement'],
+          improvements: ['More discovery time', 'Better qualifying'],
+          keyMoments: { positive: 'Good opening', needsWork: 'Rush to pitch' },
+          nextSteps: ['Prepare discovery questions', 'Practice pacing'],
         };
       }
     },
