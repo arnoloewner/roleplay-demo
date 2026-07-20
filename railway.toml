@@ -1,0 +1,7 @@
+[build]
+builder = "nixpacks"
+
+[deploy]
+startCommand = "node server/index.cjs"
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3
