@@ -173,14 +173,19 @@ export default function TextRoleplay() {
       hasInitializedRef.current = true;
       const greetings: Record<string, string[]> = {
         default: [
-          `Guten Tag, hier ist ${activeCustomPersona?.name || 'Ihr Ansprechpartner'}. Wie kann ich Ihnen helfen?`,
-          `Hallo, ${activeCustomPersona?.name || 'Ihr Ansprechpartner'} hier. Was kann ich für Sie tun?`,
-          `Grüße, ich bin ${activeCustomPersona?.name || 'Ihr Ansprechpartner'} von ${activeCustomPersona?.company || 'unserer Firma'}. Wie geht es Ihnen?`,
+          `Guten Tag, hier ist ${activeCustomPersona?.name || 'Ihr Ansprechpartner'}.`,
+          `Ja, guten Tag?`,
+          `${activeCustomPersona?.name || 'Hallo'} am Apparat.`,
+          `Guten Tag, Sie sprechen mit ${activeCustomPersona?.name || 'mir'}.`,
+          `Ja bitte?`,
+          `Hallo, ${activeCustomPersona?.name || 'hier'}.`,
         ],
         vorzimmer: [
-          `Guten Tag, hier ist das Sekretariat von ${activeCustomPersona?.company || 'unserem Unternehmen'}. Mit wem habe ich die Freude?`,
-          `Hallo, Sie sprechen mit dem Büro von ${activeCustomPersona?.company || 'uns'}. Womit kann ich Ihnen dienen?`,
-          `Guten Tag, Sekretariat ${activeCustomPersona?.company || 'hier'}. Wie kann ich Ihnen weiterhelfen?`,
+          `Guten Tag, Sekretariat ${activeCustomPersona?.company || 'hier'}. Wen möchten Sie sprechen?`,
+          `Büro ${activeCustomPersona?.company || 'XYZ'}. Mit wem habe ich die Freude?`,
+          `Guten Tag. Wie kann ich Ihnen helfen?`,
+          `Büro ${activeCustomPersona?.name || 'hier'}. Was kann ich für Sie tun?`,
+          `Guten Tag, Sekretariat. Womit kann ich Ihnen dienen?`,
         ],
       };
 

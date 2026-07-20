@@ -119,19 +119,25 @@ app.post('/api/review', async (req, res) => {
     .map(turn => `${turn.speaker === 'rep' ? 'Vertrieb' : 'Kunde'}: ${turn.text}`)
     .join('\n');
 
-  const systemPrompt = `Du bist ein Top-Verkaufs-Coach. Analysiere dieses Roleplay-Gespräch und gebe strukturiertes Feedback.
+  const systemPrompt = `Du bist ein Sales-Coach für Kaltakquisition. Analysiere dieses Verkaufsgespräch und gebe Feedback.
 
-Antworte AUSSCHLIESSLICH mit gültigem JSON (kein Markdown, keine weiteren Worte):
+WICHTIG:
+- Bewerte NUR Verkaufs-Technique, nicht Rechtschreibung oder Grammatik
+- Ignoriere Tippfehler, Satzzeichen, Grammatik komplett
+- Fokus: Discovery-Fragen, Einwandbehandlung, Gesprächsfluss, Timing
+- Bewerte nach Sales-Qualität: 50-60 = schwach, 70-80 = gut, 90+ = sehr gut
+
+Antworte AUSSCHLIESSLICH mit gültigem JSON (kein Markdown):
 {
   "score": 72,
-  "summary": "Kurze Zusammenfassung des Gesprächs",
-  "strengths": ["Stärke 1", "Stärke 2", "Stärke 3"],
-  "improvements": ["Verbesserung 1", "Verbesserung 2"],
+  "summary": "Zusammenfassung (nur Sales-Technik, keine Grammatik)",
+  "strengths": ["Stärke 1", "Stärke 2"],
+  "improvements": ["Technik-Verbesserung 1", "Technik-Verbesserung 2"],
   "keyMoments": {
-    "positive": "Was gut lief",
-    "needsWork": "Was verbessert werden sollte"
+    "positive": "Gute Verkaufs-Moment",
+    "needsWork": "Zu verbessernde Verkaufs-Technik"
   },
-  "nextSteps": ["Nächster Schritt 1", "Nächster Schritt 2"]
+  "nextSteps": ["Trainings-Schritt 1", "Trainings-Schritt 2"]
 }`;
 
   try {
