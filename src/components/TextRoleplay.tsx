@@ -40,14 +40,6 @@ const INITIAL_CONVERSATION: ConversationItem[] = [
   },
 ];
 
-const PERSONALITIES = [
-  { key: '', label: 'Zufällig', emoji: '🎲', description: 'Persönlichkeit wird automatisch gewählt' },
-  { key: 'friendly', label: 'Freundlich', emoji: '😊', description: 'Offen, gesprächsbereit, positiv eingestellt' },
-  { key: 'skeptical', label: 'Skeptisch', emoji: '🤔', description: 'Hinterfragt alles, möchte Beweise sehen' },
-  { key: 'busy', label: 'Beschäftigt', emoji: '⏱️', description: 'Wenig Zeit, kommt schnell zum Punkt' },
-  { key: 'priceSensitive', label: 'Preissensitiv', emoji: '💶', description: 'Fokus auf Kosten und ROI' },
-] as const;
-
 const INDUSTRIES = [
   { key: 'saas', label: 'SaaS / Software', emoji: '💻' },
   { key: 'ecommerce', label: 'E-Commerce / Retail', emoji: '🛒' },
@@ -65,38 +57,34 @@ const SIZE_TIERS = [
   { key: '1000+', label: '1000+', sub: 'Enterprise' },
 ] as const;
 
-const GATEKEEPER_PERSONAS = [
+const VORZIMMER_PERSONAS = [
   {
     key: 'shield',
     emoji: '🛡️',
     label: 'Schutzschild-Sekretärin',
+    description: 'Erfahrene Sekretärin, schützt den Chef vor allen Anrufen. Erkennst Verkäufer sofort.',
     difficulty: 'Schwer',
-    description: 'Du bist eine erfahrene Sekretärin die ihren Chef seit 15 Jahren schützt. Du erkennst Verkäufer sofort. Standard-Antwort: "Ich nehme gerne eine Nachricht entgegen." Stelle NIE direkt durch ohne sehr guten Grund.',
-    contextText: 'Frage immer: Worum geht es genau? Kennt er/sie Sie? Haben Sie einen Termin? Stelle nur durch wenn der Rep den Chef beim Vornamen nennt wie ein echter Bekannter.',
   },
   {
     key: 'friendly',
     emoji: '😊',
     label: 'Freundliche Empfang',
+    description: 'Hilfsbereit, folgt dem Protokoll. Bietet immer an eine Nachricht zu hinterlassen.',
     difficulty: 'Mittel',
-    description: 'Du bist die freundliche Empfangsdame. Du bist hilfsbereit aber folgst dem Protokoll. Du bietest immer an eine Nachricht entgegenzunehmen oder eine E-Mail weiterzuleiten.',
-    contextText: 'Sage: "Oh, er ist gerade in einem Meeting. Darf ich eine Nachricht hinterlassen?" Stelle nur durch wenn der Rep einen wirklich überzeugenden konkreten Grund nennt.',
   },
   {
     key: 'skeptical',
     emoji: '🤨',
     label: 'Skeptischer Office Manager',
+    description: 'Hört täglich 20 Verkaufsanrufe. Abweisend, Standard: "Schicken Sie eine E-Mail".',
     difficulty: 'Sehr Schwer',
-    description: 'Du bist der skeptische Office Manager. Du hörst täglich 20 Verkaufsanrufe. Du erkennst Verkäufer sofort und bist entsprechend abweisend. Deine Standard-Antwort ist immer: "Schicken Sie eine E-Mail."',
-    contextText: 'Sage fast immer: "Am besten schicken Sie eine E-Mail, er schaut sich alle an." Nur wenn der Rep NICHT wie ein Verkäufer klingt oder einen extrem konkreten geschäftlichen Nutzen nennt, prüfst du ob der Chef Zeit hat.',
   },
 ] as const;
 
 type IndustryKey = typeof INDUSTRIES[number]['key'];
 type SizeKey = typeof SIZE_TIERS[number]['key'];
-type GatekeeperKey = typeof GATEKEEPER_PERSONAS[number]['key'];
+type VorzimmerKey = typeof VORZIMMER_PERSONAS[number]['key'];
 
-// Utility to build company persona based on industry + size
 function buildCompanyPersona(industry: IndustryKey, size: SizeKey) {
   const roles: Record<IndustryKey, Record<SizeKey, string>> = {
     saas: { '1-10': 'CEO & Co-Founder', '11-50': 'CEO', '51-200': 'VP Sales', '201-1000': 'CRO', '1000+': 'SVP Revenue' },
@@ -141,42 +129,28 @@ export default function TextRoleplay() {
   const [isReviewing, setIsReviewing] = useState(false);
   const [responseTime, setResponseTime] = useState<number | null>(null);
 
-  // Setup state
-  const [personaTab, setPersonaTab] = useState<'company' | 'gatekeeper' | 'custom'>('company');
+  // Setup state - alle auf einer Seite
   const [selectedIndustry, setSelectedIndustry] = useState<IndustryKey | null>(null);
   const [selectedSize, setSelectedSize] = useState<SizeKey | null>(null);
-  const [selectedGatekeeper, setSelectedGatekeeper] = useState<GatekeeperKey | null>(null);
-  const [selectedPersonality, setSelectedPersonality] = useState('');
+  const [useVorzimmer, setUseVorzimmer] = useState(false);
+  const [selectedVorzimmer, setSelectedVorzimmer] = useState<VorzimmerKey | null>(null);
+  const [useCustom, setUseCustom] = useState(false);
   const [personaName, setPersonaName] = useState('');
   const [personaCompany, setPersonaCompany] = useState('');
   const [personaRole, setPersonaRole] = useState('');
   const [personaDescription, setPersonaDescription] = useState('');
 
   const [activeCustomPersona, setActiveCustomPersona] = useState<CustomPersona | null>(null);
-  const [personalityKey, setPersonalityKey] = useState('');
-  const [personalityLabel, setPersonalityLabel] = useState('');
-
   const conversationRef = useRef(conversation);
   const isProcessingRef = useRef(isProcessing);
   const sessionEndedRef = useRef(sessionEnded);
   const customerLastSaidRef = useRef<number>(0);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    conversationRef.current = conversation;
-  }, [conversation]);
-
-  useEffect(() => {
-    isProcessingRef.current = isProcessing;
-  }, [isProcessing]);
-
-  useEffect(() => {
-    sessionEndedRef.current = sessionEnded;
-  }, [sessionEnded]);
-
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [conversation, isProcessing]);
+  useEffect(() => { conversationRef.current = conversation; }, [conversation]);
+  useEffect(() => { isProcessingRef.current = isProcessing; }, [isProcessing]);
+  useEffect(() => { sessionEndedRef.current = sessionEnded; }, [sessionEnded]);
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [conversation, isProcessing]);
 
   const toTurns = (conv: ConversationItem[]): RoleplayTurn[] => {
     return conv
@@ -184,7 +158,7 @@ export default function TextRoleplay() {
       .map((i) => ({ speaker: i.speaker as 'rep' | 'customer', text: i.text }));
   };
 
-  const sendMessage = async (turns: RoleplayTurn[], persona?: string, customPersona?: CustomPersona | null): Promise<any> => {
+  const sendMessage = async (turns: RoleplayTurn[], customPersona?: CustomPersona | null): Promise<any> => {
     const response = await apiFetch('/api/chat/stream', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -194,13 +168,12 @@ export default function TextRoleplay() {
           content: t.text,
         })),
         scenario: customPersona?.description || 'Sales roleplay',
-        persona: customPersona?.role || persona || 'prospect',
+        persona: customPersona?.role || 'prospect',
       }),
     });
 
     if (!response.ok) throw new Error(`API error: ${response.statusText}`);
 
-    // Handle streaming response
     let fullText = '';
     const reader = response.body?.getReader();
     if (!reader) throw new Error('No response body');
@@ -215,22 +188,17 @@ export default function TextRoleplay() {
           try {
             const data = JSON.parse(line.slice(6));
             if (data.text) fullText += data.text;
-          } catch { /* ignore */ }
+          } catch { }
         }
       }
     }
 
-    return {
-      reply: fullText.trim(),
-      personality: persona || 'random',
-      personalityLabel: personalityLabel || 'Customer',
-    };
+    return { reply: fullText.trim() };
   };
 
   const submitMessage = async (text: string) => {
     if (!text.trim() || isProcessingRef.current || sessionEndedRef.current) return;
 
-    // Measure response time
     if (customerLastSaidRef.current > 0) {
       const respTime = Math.round((Date.now() - customerLastSaidRef.current) / 1000);
       setResponseTime(respTime);
@@ -240,24 +208,15 @@ export default function TextRoleplay() {
     const repMsg: ConversationItem = { id: Date.now(), speaker: 'rep', text };
     const snapshot = [...conversationRef.current, repMsg];
     setConversation(snapshot);
-
     setIsProcessing(true);
     setError('');
 
     try {
-      const result = await sendMessage(toTurns(snapshot), personalityKey, activeCustomPersona);
-
-      // Lock in personality after first reply
-      if (!personalityKey && result.personality) {
-        setPersonalityKey(result.personality);
-        setPersonalityLabel(result.personalityLabel);
-      }
-
+      const result = await sendMessage(toTurns(snapshot), activeCustomPersona);
       setConversation((prev) => [
         ...prev,
         { id: Date.now() + 1, speaker: 'customer', text: result.reply },
       ]);
-
       customerLastSaidRef.current = Date.now();
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Unknown error';
@@ -276,21 +235,21 @@ export default function TextRoleplay() {
   };
 
   const startSession = () => {
-    if (personaTab === 'gatekeeper' && selectedGatekeeper) {
-      const gk = GATEKEEPER_PERSONAS.find((g) => g.key === selectedGatekeeper)!;
+    if (useVorzimmer && selectedVorzimmer) {
+      const vz = VORZIMMER_PERSONAS.find((v) => v.key === selectedVorzimmer)!;
       setActiveCustomPersona({
         name: 'Sekretariat',
         company: 'Unternehmen',
         role: 'Sekretärin / Assistent',
         industry: 'Allgemein',
-        description: `TÜRSTEHER-TRAINING\n${gk.description}\n\nWICHTIG: Antworte NUR als Sekretärin/Assistent. Nie als Entscheider.`,
-        contextText: gk.contextText,
+        description: `VORZIMMER-TRAINING\n${vz.label}\n\n${vz.description}\n\nWICHTIG: Antworte NUR als Sekretärin/Assistent. Nie als Entscheider antworten.`,
+        contextText: 'Du schützt den Chef vor ungewollten Anrufen.',
       });
       setSessionStarted(true);
       return;
     }
 
-    if (personaTab === 'company' && selectedIndustry && selectedSize) {
+    if (!useCustom && selectedIndustry && selectedSize) {
       const preset = buildCompanyPersona(selectedIndustry, selectedSize);
       const ind = INDUSTRIES.find((i) => i.key === selectedIndustry)!;
       const sz = SIZE_TIERS.find((s) => s.key === selectedSize)!;
@@ -306,7 +265,7 @@ export default function TextRoleplay() {
       return;
     }
 
-    if (personaTab === 'custom' && (personaName || personaCompany || personaDescription)) {
+    if (useCustom && (personaName || personaCompany || personaDescription)) {
       setActiveCustomPersona({
         name: personaName || 'Customer',
         company: personaCompany || 'Company',
@@ -360,386 +319,455 @@ export default function TextRoleplay() {
     setSessionEnded(false);
     setReview(null);
     setError('');
-    setPersonalityKey('');
-    setPersonalityLabel('');
     setSessionStarted(false);
     setActiveCustomPersona(null);
     setResponseTime(null);
   };
 
-  // Setup Screen
+  // ── Setup Screen ────────────────────────────────────────────────────────────
   if (!sessionStarted) {
     return (
-      <div style={{ maxWidth: 620, margin: '0 auto', padding: '20px' }}>
-        <h1>🎯 Sales Roleplay — Text Chat</h1>
+      <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #f0f4f8 0%, #ffffff 100%)', padding: '40px 20px' }}>
+        <div style={{ maxWidth: 900, margin: '0 auto' }}>
+          {/* Header */}
+          <div style={{ textAlign: 'center', marginBottom: 50 }}>
+            <h1 style={{ fontSize: 32, fontWeight: 700, margin: '0 0 8px 0', color: '#1e293b' }}>
+              🎯 Sales Roleplay
+            </h1>
+            <p style={{ fontSize: 14, color: '#64748b', margin: 0 }}>
+              Trainiere deine Verkaufsfähigkeiten mit realistischen Kundenpersonas
+            </p>
+          </div>
 
-        {/* Persona Selection Tabs */}
-        <div style={{ display: 'flex', gap: 8, marginBottom: 20, borderBottom: '2px solid #eee' }}>
-          {['company', 'gatekeeper', 'custom'].map((tab) => (
+          {/* Main Grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 30, marginBottom: 40 }}>
+            {/* Left: Company Personas */}
+            <div style={{ background: '#fff', borderRadius: 12, padding: 28, boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+              <h2 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 20px 0', color: '#1e293b', display: 'flex', alignItems: 'center', gap: 8 }}>
+                🏢 Unternehmen
+              </h2>
+
+              <div style={{ marginBottom: 24 }}>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 10 }}>
+                  Industrie
+                </label>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                  {INDUSTRIES.map((ind) => (
+                    <button
+                      key={ind.key}
+                      onClick={() => { setSelectedIndustry(ind.key); setUseVorzimmer(false); setUseCustom(false); }}
+                      style={{
+                        padding: '10px 12px',
+                        background: selectedIndustry === ind.key ? '#2563eb' : '#f1f5f9',
+                        color: selectedIndustry === ind.key ? '#fff' : '#1e293b',
+                        border: 'none',
+                        borderRadius: 8,
+                        cursor: 'pointer',
+                        fontSize: 12,
+                        fontWeight: 500,
+                        transition: 'all 0.2s',
+                      }}
+                    >
+                      {ind.emoji} {ind.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 10 }}>
+                  Unternehmensgröße
+                </label>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                  {SIZE_TIERS.map((size) => (
+                    <button
+                      key={size.key}
+                      onClick={() => setSelectedSize(size.key)}
+                      style={{
+                        padding: '10px 12px',
+                        background: selectedSize === size.key ? '#2563eb' : '#f1f5f9',
+                        color: selectedSize === size.key ? '#fff' : '#1e293b',
+                        border: 'none',
+                        borderRadius: 8,
+                        cursor: 'pointer',
+                        fontSize: 12,
+                        fontWeight: 500,
+                      }}
+                    >
+                      {size.label}
+                      <div style={{ fontSize: 11, opacity: 0.8, marginTop: 2 }}>{size.sub}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Right: Vorzimmer & Custom */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+              {/* Vorzimmer Section */}
+              <div style={{ background: '#fff', borderRadius: 12, padding: 28, boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+                  <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0, color: '#1e293b', display: 'flex', alignItems: 'center', gap: 8 }}>
+                    🛡️ Vorzimmer
+                  </h2>
+                  <button
+                    onClick={() => setUseVorzimmer(!useVorzimmer)}
+                    style={{
+                      background: useVorzimmer ? '#2563eb' : '#e2e8f0',
+                      border: 'none',
+                      borderRadius: 20,
+                      width: 44,
+                      height: 24,
+                      cursor: 'pointer',
+                      transition: 'all 0.3s',
+                      display: 'flex',
+                      alignItems: 'center',
+                      padding: '2px 4px',
+                    }}
+                  >
+                    <div style={{
+                      width: 18,
+                      height: 18,
+                      background: '#fff',
+                      borderRadius: '50%',
+                      transition: 'all 0.3s',
+                      marginLeft: useVorzimmer ? 18 : 0,
+                    }} />
+                  </button>
+                </div>
+
+                {useVorzimmer && (
+                  <div style={{ display: 'grid', gap: 10 }}>
+                    {VORZIMMER_PERSONAS.map((vz) => (
+                      <button
+                        key={vz.key}
+                        onClick={() => setSelectedVorzimmer(vz.key)}
+                        style={{
+                          padding: '12px 14px',
+                          background: selectedVorzimmer === vz.key ? '#2563eb' : '#f1f5f9',
+                          color: selectedVorzimmer === vz.key ? '#fff' : '#1e293b',
+                          border: 'none',
+                          borderRadius: 8,
+                          cursor: 'pointer',
+                          textAlign: 'left',
+                          fontSize: 13,
+                          fontWeight: 500,
+                          transition: 'all 0.2s',
+                        }}
+                      >
+                        <div>{vz.emoji} {vz.label}</div>
+                        <div style={{ fontSize: 11, opacity: 0.7, marginTop: 4 }}>
+                          {vz.difficulty}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Custom Persona Section */}
+              <div style={{ background: '#fff', borderRadius: 12, padding: 28, boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+                  <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0, color: '#1e293b', display: 'flex', alignItems: 'center', gap: 8 }}>
+                    ✏️ Benutzerdefiniert
+                  </h2>
+                  <button
+                    onClick={() => setUseCustom(!useCustom)}
+                    style={{
+                      background: useCustom ? '#2563eb' : '#e2e8f0',
+                      border: 'none',
+                      borderRadius: 20,
+                      width: 44,
+                      height: 24,
+                      cursor: 'pointer',
+                      transition: 'all 0.3s',
+                      display: 'flex',
+                      alignItems: 'center',
+                      padding: '2px 4px',
+                    }}
+                  >
+                    <div style={{
+                      width: 18,
+                      height: 18,
+                      background: '#fff',
+                      borderRadius: '50%',
+                      transition: 'all 0.3s',
+                      marginLeft: useCustom ? 18 : 0,
+                    }} />
+                  </button>
+                </div>
+
+                {useCustom && (
+                  <div style={{ display: 'grid', gap: 10 }}>
+                    <input
+                      type="text"
+                      placeholder="Name"
+                      value={personaName}
+                      onChange={(e) => setPersonaName(e.target.value)}
+                      style={{ padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: 6, fontSize: 13 }}
+                    />
+                    <input
+                      type="text"
+                      placeholder="Unternehmen"
+                      value={personaCompany}
+                      onChange={(e) => setPersonaCompany(e.target.value)}
+                      style={{ padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: 6, fontSize: 13 }}
+                    />
+                    <input
+                      type="text"
+                      placeholder="Rolle"
+                      value={personaRole}
+                      onChange={(e) => setPersonaRole(e.target.value)}
+                      style={{ padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: 6, fontSize: 13 }}
+                    />
+                    <textarea
+                      placeholder="Beschreibung & Kontext"
+                      value={personaDescription}
+                      onChange={(e) => setPersonaDescription(e.target.value)}
+                      style={{ padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: 6, fontSize: 13, minHeight: 80 }}
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Error Message */}
+          {error && (
+            <div style={{ background: '#fee2e2', border: '1px solid #fca5a5', color: '#991b1b', padding: '12px 16px', borderRadius: 8, marginBottom: 20, fontSize: 13 }}>
+              {error}
+            </div>
+          )}
+
+          {/* Start Button */}
+          <div style={{ textAlign: 'center' }}>
             <button
-              key={tab}
-              onClick={() => setPersonaTab(tab as any)}
+              onClick={startSession}
               style={{
-                padding: '10px 16px',
-                background: personaTab === tab ? '#2563eb' : 'transparent',
-                color: personaTab === tab ? '#fff' : '#000',
+                padding: '14px 40px',
+                background: '#2563eb',
+                color: '#fff',
                 border: 'none',
-                borderBottom: personaTab === tab ? '3px solid #2563eb' : 'none',
+                borderRadius: 8,
                 cursor: 'pointer',
-                fontWeight: 600,
-                fontSize: 13,
+                fontSize: 15,
+                fontWeight: 700,
+                boxShadow: '0 4px 6px rgba(37, 99, 235, 0.2)',
+                transition: 'all 0.2s',
+              }}
+              onMouseOver={(e) => {
+                (e.target as HTMLButtonElement).style.background = '#1d4ed8';
+                (e.target as HTMLButtonElement).style.boxShadow = '0 6px 12px rgba(37, 99, 235, 0.3)';
+              }}
+              onMouseOut={(e) => {
+                (e.target as HTMLButtonElement).style.background = '#2563eb';
+                (e.target as HTMLButtonElement).style.boxShadow = '0 4px 6px rgba(37, 99, 235, 0.2)';
               }}
             >
-              {tab === 'company' && '🏢 Unternehmen'}
-              {tab === 'gatekeeper' && '🛡️ Türsteher'}
-              {tab === 'custom' && '✏️ Benutzerdefiniert'}
+              🎬 Roleplay Starten
             </button>
-          ))}
-        </div>
-
-        {/* Company Persona */}
-        {personaTab === 'company' && (
-          <div>
-            <h3>Industrie & Größe</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, marginBottom: 20 }}>
-              <div>
-                <label style={{ display: 'block', marginBottom: 8, fontWeight: 600 }}>Industrie</label>
-                {INDUSTRIES.map((ind) => (
-                  <button
-                    key={ind.key}
-                    onClick={() => setSelectedIndustry(ind.key)}
-                    style={{
-                      display: 'block',
-                      width: '100%',
-                      padding: '10px',
-                      margin: '4px 0',
-                      background: selectedIndustry === ind.key ? '#2563eb' : '#f5f5f5',
-                      color: selectedIndustry === ind.key ? '#fff' : '#000',
-                      border: 'none',
-                      borderRadius: 6,
-                      cursor: 'pointer',
-                      fontSize: 13,
-                    }}
-                  >
-                    {ind.emoji} {ind.label}
-                  </button>
-                ))}
-              </div>
-
-              <div>
-                <label style={{ display: 'block', marginBottom: 8, fontWeight: 600 }}>Unternehmensgröße</label>
-                {SIZE_TIERS.map((size) => (
-                  <button
-                    key={size.key}
-                    onClick={() => setSelectedSize(size.key)}
-                    style={{
-                      display: 'block',
-                      width: '100%',
-                      padding: '10px',
-                      margin: '4px 0',
-                      background: selectedSize === size.key ? '#2563eb' : '#f5f5f5',
-                      color: selectedSize === size.key ? '#fff' : '#000',
-                      border: 'none',
-                      borderRadius: 6,
-                      cursor: 'pointer',
-                      fontSize: 13,
-                    }}
-                  >
-                    {size.label} ({size.sub})
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Gatekeeper Personas */}
-        {personaTab === 'gatekeeper' && (
-          <div>
-            <h3>Gatekeeper Training</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 12 }}>
-              {GATEKEEPER_PERSONAS.map((gk) => (
-                <button
-                  key={gk.key}
-                  onClick={() => setSelectedGatekeeper(gk.key)}
-                  style={{
-                    padding: '12px 16px',
-                    background: selectedGatekeeper === gk.key ? '#2563eb' : '#f5f5f5',
-                    color: selectedGatekeeper === gk.key ? '#fff' : '#000',
-                    border: selectedGatekeeper === gk.key ? '2px solid #2563eb' : '1px solid #ddd',
-                    borderRadius: 8,
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    fontSize: 13,
-                  }}
-                >
-                  <div style={{ fontWeight: 700 }}>{gk.emoji} {gk.label}</div>
-                  <div style={{ fontSize: 12, marginTop: 4, opacity: 0.8 }}>{gk.difficulty}</div>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Custom Persona */}
-        {personaTab === 'custom' && (
-          <div>
-            <h3>Benutzerdefiniertes Persona</h3>
-            <div style={{ display: 'grid', gap: 12 }}>
-              <input
-                type="text"
-                placeholder="Name"
-                value={personaName}
-                onChange={(e) => setPersonaName(e.target.value)}
-                style={{ padding: '10px', border: '1px solid #ccc', borderRadius: 6, fontSize: 13 }}
-              />
-              <input
-                type="text"
-                placeholder="Unternehmen"
-                value={personaCompany}
-                onChange={(e) => setPersonaCompany(e.target.value)}
-                style={{ padding: '10px', border: '1px solid #ccc', borderRadius: 6, fontSize: 13 }}
-              />
-              <input
-                type="text"
-                placeholder="Rolle"
-                value={personaRole}
-                onChange={(e) => setPersonaRole(e.target.value)}
-                style={{ padding: '10px', border: '1px solid #ccc', borderRadius: 6, fontSize: 13 }}
-              />
-              <textarea
-                placeholder="Beschreibung & Kontext"
-                value={personaDescription}
-                onChange={(e) => setPersonaDescription(e.target.value)}
-                style={{ padding: '10px', border: '1px solid #ccc', borderRadius: 6, fontSize: 13, minHeight: 80 }}
-              />
-            </div>
-          </div>
-        )}
-
-        {/* Personality Selection */}
-        <div style={{ marginTop: 20 }}>
-          <label style={{ display: 'block', marginBottom: 10, fontWeight: 600 }}>Kundentyp (optional)</label>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
-            {PERSONALITIES.map((p) => (
-              <button
-                key={p.key}
-                onClick={() => setSelectedPersonality(p.key)}
-                style={{
-                  padding: '10px',
-                  background: selectedPersonality === p.key ? '#2563eb' : '#f5f5f5',
-                  color: selectedPersonality === p.key ? '#fff' : '#000',
-                  border: 'none',
-                  borderRadius: 6,
-                  cursor: 'pointer',
-                  fontSize: 12,
-                }}
-              >
-                {p.emoji} {p.label}
-              </button>
-            ))}
           </div>
         </div>
-
-        {error && <div style={{ color: 'red', marginTop: 10 }}>{error}</div>}
-
-        <button
-          onClick={startSession}
-          style={{
-            marginTop: 20,
-            width: '100%',
-            padding: '12px',
-            background: '#2563eb',
-            color: '#fff',
-            border: 'none',
-            borderRadius: 8,
-            cursor: 'pointer',
-            fontSize: 14,
-            fontWeight: 700,
-          }}
-        >
-          🎬 Roleplay Starten
-        </button>
       </div>
     );
   }
 
-  // Chat Screen
+  // ── Chat Screen ──────────────────────────────────────────────────────────────
   return (
-    <div style={{ maxWidth: 620, margin: '0 auto', padding: '20px', display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-      <h1>💬 {activeCustomPersona?.name || 'Customer'}</h1>
-      <div style={{ fontSize: 12, color: '#666', marginBottom: 10 }}>
-        {activeCustomPersona?.company} · {activeCustomPersona?.role}
+    <div style={{ minHeight: '100vh', background: '#ffffff', display: 'flex', flexDirection: 'column' }}>
+      {/* Header */}
+      <div style={{ padding: '20px 24px', background: 'linear-gradient(135deg, #f0f4f8 0%, #ffffff 100%)', borderBottom: '1px solid #e2e8f0' }}>
+        <div style={{ maxWidth: 620, margin: '0 auto' }}>
+          <h1 style={{ fontSize: 20, fontWeight: 700, margin: '0 0 4px 0', color: '#1e293b' }}>
+            💬 {activeCustomPersona?.name || 'Customer'}
+          </h1>
+          <p style={{ fontSize: 12, color: '#64748b', margin: 0 }}>
+            {activeCustomPersona?.company} · {activeCustomPersona?.role}
+          </p>
+        </div>
       </div>
 
-      {/* Conversation */}
-      <div
-        style={{
-          flex: 1,
-          border: '1px solid #ddd',
-          borderRadius: 8,
-          padding: '16px',
-          marginBottom: '16px',
-          overflowY: 'auto',
-          background: '#fafafa',
-        }}
-      >
-        {conversation.map((item) => (
-          <div
-            key={item.id}
-            style={{
-              marginBottom: '12px',
-              textAlign: item.speaker === 'rep' ? 'right' : 'left',
-            }}
-          >
-            {item.speaker === 'system' && (
-              <div style={{ fontSize: 12, color: '#999', fontStyle: 'italic' }}>{item.text}</div>
-            )}
-            {item.speaker !== 'system' && (
-              <div
-                style={{
-                  display: 'inline-block',
-                  maxWidth: '80%',
-                  padding: '10px 12px',
-                  borderRadius: 8,
-                  background: item.speaker === 'rep' ? '#2563eb' : '#e0e0e0',
-                  color: item.speaker === 'rep' ? '#fff' : '#000',
-                  wordWrap: 'break-word',
-                  fontSize: 13,
-                }}
-              >
-                {item.text}
-              </div>
-            )}
-            {responseTime !== null && item.speaker === 'customer' && (
-              <div style={{ fontSize: 11, color: '#999', marginTop: 4 }}>⏱️ {responseTime}s</div>
-            )}
-          </div>
-        ))}
-        {isProcessing && (
-          <div style={{ fontSize: 12, color: '#666', fontStyle: 'italic' }}>Customer antwortet...</div>
-        )}
-        <div ref={bottomRef} />
+      {/* Chat Container */}
+      <div style={{ flex: 1, overflow: 'auto', padding: '20px 24px', maxWidth: 620, margin: '0 auto', width: '100%' }}>
+        {/* Conversation */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          {conversation.map((item) => (
+            <div
+              key={item.id}
+              style={{
+                display: 'flex',
+                justifyContent: item.speaker === 'rep' ? 'flex-end' : 'flex-start',
+                alignItems: item.speaker === 'system' ? 'center' : 'flex-end',
+                gap: 8,
+              }}
+            >
+              {item.speaker === 'system' && (
+                <div style={{ fontSize: 12, color: '#94a3b8', fontStyle: 'italic', textAlign: 'center', width: '100%' }}>
+                  {item.text}
+                </div>
+              )}
+              {item.speaker !== 'system' && (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: item.speaker === 'rep' ? 'flex-end' : 'flex-start', gap: 4 }}>
+                  <div
+                    style={{
+                      maxWidth: '70%',
+                      padding: '11px 14px',
+                      borderRadius: 10,
+                      background: item.speaker === 'rep' ? '#2563eb' : '#e2e8f0',
+                      color: item.speaker === 'rep' ? '#fff' : '#1e293b',
+                      wordWrap: 'break-word',
+                      fontSize: 13,
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    {item.text}
+                  </div>
+                  {responseTime !== null && item.speaker === 'customer' && (
+                    <div style={{ fontSize: 11, color: '#94a3b8' }}>⏱️ {responseTime}s</div>
+                  )}
+                </div>
+              )}
+            </div>
+          ))}
+          {isProcessing && (
+            <div style={{ fontSize: 12, color: '#64748b', fontStyle: 'italic', display: 'flex', gap: 6, alignItems: 'center' }}>
+              <span>Customer antwortet</span>
+              <span style={{ animation: 'pulse 1.5s infinite', animationName: 'pulse' }}>•••</span>
+            </div>
+          )}
+          <div ref={bottomRef} />
+        </div>
       </div>
 
       {/* Review Section */}
       {sessionEnded && review && (
-        <div
-          style={{
-            background: '#f0f9ff',
-            border: '1px solid #bfdbfe',
-            borderRadius: 8,
-            padding: '16px',
-            marginBottom: '16px',
-            fontSize: 13,
-          }}
-        >
-          <h2 style={{ margin: '0 0 12px 0', fontSize: 16 }}>📊 Coaching-Feedback</h2>
-          <div style={{ marginBottom: 12 }}>
-            <strong>Score: {review.score}/100</strong>
-          </div>
-          <div style={{ marginBottom: 12 }}>
-            <strong>Stärken:</strong>
-            <ul style={{ marginTop: 4 }}>
-              {review.strengths.map((s, i) => (
-                <li key={i} style={{ fontSize: 12 }}>
-                  {s}
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div>
-            <strong>Verbesserungen:</strong>
-            <ul style={{ marginTop: 4 }}>
-              {review.improvements.map((imp, i) => (
-                <li key={i} style={{ fontSize: 12 }}>
-                  {imp}
-                </li>
-              ))}
-            </ul>
+        <div style={{ maxWidth: 620, margin: '0 auto', width: '100%', padding: '0 24px 20px' }}>
+          <div style={{ background: '#f0f9ff', border: '1px solid #bfdbfe', borderRadius: 10, padding: 20 }}>
+            <h2 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 14px 0', color: '#1e40af' }}>
+              📊 Coaching-Feedback
+            </h2>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#1e40af', marginBottom: 12 }}>
+              Score: {review.score}/100
+            </div>
+
+            {review.strengths.length > 0 && (
+              <div style={{ marginBottom: 14 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: '#1e40af', marginBottom: 6 }}>
+                  ✅ Stärken:
+                </div>
+                <ul style={{ margin: 0, paddingLeft: 20 }}>
+                  {review.strengths.map((s, i) => (
+                    <li key={i} style={{ fontSize: 12, color: '#1e40af', marginBottom: 4 }}>
+                      {s}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {review.improvements.length > 0 && (
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: '#1e40af', marginBottom: 6 }}>
+                  💡 Verbesserungen:
+                </div>
+                <ul style={{ margin: 0, paddingLeft: 20 }}>
+                  {review.improvements.map((imp, i) => (
+                    <li key={i} style={{ fontSize: 12, color: '#1e40af', marginBottom: 4 }}>
+                      {imp}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         </div>
       )}
 
-      {/* Input Form */}
-      {!sessionEnded && (
-        <form onSubmit={handleTextSubmit} style={{ display: 'flex', gap: 8 }}>
-          <input
-            type="text"
-            value={textInput}
-            onChange={(e) => setTextInput(e.target.value)}
-            placeholder="Deine Nachricht..."
-            disabled={isProcessing}
-            style={{
-              flex: 1,
-              padding: '10px 12px',
-              border: '1px solid #ccc',
-              borderRadius: 6,
-              fontSize: 13,
-            }}
-          />
-          <button
-            type="submit"
-            disabled={isProcessing || !textInput.trim()}
-            style={{
-              padding: '10px 16px',
-              background: '#2563eb',
-              color: '#fff',
-              border: 'none',
-              borderRadius: 6,
-              cursor: 'pointer',
-              fontWeight: 600,
-              fontSize: 13,
-            }}
-          >
-            {isProcessing ? '⏳' : '📤'}
-          </button>
-        </form>
-      )}
+      {/* Input Form & Buttons */}
+      <div style={{ padding: '20px 24px', background: '#f8fafc', borderTop: '1px solid #e2e8f0' }}>
+        <div style={{ maxWidth: 620, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {!sessionEnded && (
+            <form onSubmit={handleTextSubmit} style={{ display: 'flex', gap: 10 }}>
+              <input
+                type="text"
+                value={textInput}
+                onChange={(e) => setTextInput(e.target.value)}
+                placeholder="Deine Nachricht..."
+                disabled={isProcessing}
+                style={{
+                  flex: 1,
+                  padding: '11px 14px',
+                  border: '1px solid #cbd5e1',
+                  borderRadius: 8,
+                  fontSize: 13,
+                  fontFamily: 'inherit',
+                }}
+              />
+              <button
+                type="submit"
+                disabled={isProcessing || !textInput.trim()}
+                style={{
+                  padding: '11px 16px',
+                  background: '#2563eb',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: 8,
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                  fontSize: 13,
+                }}
+              >
+                {isProcessing ? '⏳' : '📤'}
+              </button>
+            </form>
+          )}
 
-      {/* Action Buttons */}
-      <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-        {!sessionEnded ? (
-          <button
-            onClick={handleEndRoleplay}
-            disabled={isReviewing}
-            style={{
-              flex: 1,
-              padding: '10px',
-              background: '#ef4444',
-              color: '#fff',
-              border: 'none',
-              borderRadius: 6,
-              cursor: 'pointer',
-              fontWeight: 600,
-            }}
-          >
-            {isReviewing ? '⏳ Analysieren...' : '⏹️ Beenden & Analysieren'}
-          </button>
-        ) : (
-          <button
-            onClick={resetConversation}
-            style={{
-              flex: 1,
-              padding: '10px',
-              background: '#2563eb',
-              color: '#fff',
-              border: 'none',
-              borderRadius: 6,
-              cursor: 'pointer',
-              fontWeight: 600,
-            }}
-          >
-            🔄 Neue Session
-          </button>
-        )}
+          <div style={{ display: 'flex', gap: 10 }}>
+            {!sessionEnded ? (
+              <button
+                onClick={handleEndRoleplay}
+                disabled={isReviewing}
+                style={{
+                  flex: 1,
+                  padding: '11px 16px',
+                  background: '#ef4444',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: 8,
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                  fontSize: 13,
+                }}
+              >
+                {isReviewing ? '⏳ Analysieren...' : '⏹️ Beenden & Analysieren'}
+              </button>
+            ) : (
+              <button
+                onClick={resetConversation}
+                style={{
+                  flex: 1,
+                  padding: '11px 16px',
+                  background: '#2563eb',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: 8,
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                  fontSize: 13,
+                }}
+              >
+                🔄 Neue Session
+              </button>
+            )}
+          </div>
+
+          {error && (
+            <div style={{ padding: '10px 12px', background: '#fee2e2', border: '1px solid #fca5a5', borderRadius: 6, color: '#991b1b', fontSize: 12 }}>
+              {error}
+            </div>
+          )}
+        </div>
       </div>
-
-      {error && (
-        <div style={{ marginTop: 12, padding: '10px', background: '#fee', borderRadius: 6, color: '#c00', fontSize: 13 }}>
-          {error}
-        </div>
-      )}
     </div>
   );
 }
